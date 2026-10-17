@@ -36,7 +36,7 @@
   <div class="skill" class:locked={!open}>
     <div><b>{a.name?.ru}</b> <span class="muted">· {tag}</span></div>
     <div>{abilityText(a, 'ru')}</div>
-    {#if !open}<div class="muted">🔒 {lock}</div>{/if}
+    {#if !open}<div class="muted">{lock}</div>{/if}
   </div>
 {/snippet}
 
