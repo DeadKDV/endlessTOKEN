@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { GameState } from '../src/sim/types';
 import LZString from 'lz-string';
 import { newGameState, buildParty, petStatMult } from '../src/sim/party';
 import { buildingById, buildingUpgradeCost, buyBuilding, villageMods, affordable, dungeonUnlockLevel } from '../src/sim/buildings';
@@ -144,7 +145,7 @@ describe('формы', () => {
 describe('подземелья', () => {
   const day1 = new Date(2026, 9, 17, 23, 59).getTime();
   const day2 = new Date(2026, 9, 18, 0, 0).getTime();
-  const open = () => ({ ...newGameState(day1), base: { portal: 100 } });
+  const open = (): GameState => ({ ...newGameState(day1), base: { portal: 100 } });
   it('открытие по уровню портала', () => {
     const s = { ...mk(), base: { portal: 10 } };
     expect(dungeonUnlocked(s, 'crypt')).toBe(true);
@@ -347,5 +348,13 @@ describe('золото и магазин', () => {
     expect(r.gems).toBe(500); expect(r.perks.permGold).toBe(true);
     expect(buyPermGold({ ...r, gems: 5000 })).toEqual({ ...r, gems: 5000 });
     expect(buyPermGold({ ...s, gems: 999 }).perks.permGold).toBe(false);
+  });
+});
+
+describe('словари', () => {
+  it('ru и en содержат одинаковые ключи', async () => {
+    const ru = (await import('../src/data/i18n/ru.json')).default; const en = (await import('../src/data/i18n/en.json')).default;
+    const keys = (o: any, p = ''): string[] => Object.entries(o).flatMap(([k, v]) => (typeof v === 'object' ? keys(v, p + k + '.') : [p + k]));
+    expect(keys(ru).sort()).toEqual(keys(en).sort());
   });
 });
