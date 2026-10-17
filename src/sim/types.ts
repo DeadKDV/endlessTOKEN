@@ -58,6 +58,6 @@ export interface GameState {
   village: Record<string, number>;
   base: Record<string, number>;
   creepMix: Record<CreepType, number>;
-  dungeonRuns: { date: string } & Partial<Record<string, number>>;
+  dungeonRuns: { date: string; [dungeon: string]: string | number };
   ads: { speedUntil: number; boostUntil: number; resourcesToday: number; gemsToday: number; day: string };
 }

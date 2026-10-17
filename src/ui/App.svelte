@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { state, offlinePopup, levelUpHero } from '../game';
+  import { save, offlinePopup, levelUpHero } from '../game';
   import { heroLevelCost } from '../sim/economy';
   import { heroById } from '../sim/party';
   import ru from '../data/i18n/ru.json';
@@ -11,21 +11,21 @@
 </script>
 
 <div class="top">
-  <span>💰 {fmt(Number($state.gold))}</span>
-  <span>⭐ {$state.floorPoints}</span>
-  <span>💎 {$state.gems}</span>
-  <span>🔮 {$state.crystals}</span>
+  <span>💰 {fmt(Number($save.gold))}</span>
+  <span>⭐ {$save.floorPoints}</span>
+  <span>💎 {$save.gems}</span>
+  <span>🔮 {$save.crystals}</span>
 </div>
 
 <div class="panel">
   {#if tab === 'battle'}
     <AdButtons />
   {:else if tab === 'heroes'}
-    {#each Object.entries($state.heroes) as [id, h]}
+    {#each Object.entries($save.heroes) as [id, h]}
       {@const def = heroById(id)}
       <div class="row">
         <span>{def?.name.ru} · {ru.level.replace('{n}', String(h.lvl))} · {ru.form[String(h.form) as '0'|'1'|'2']}</span>
-        <button onclick={() => levelUpHero(id)} disabled={Number($state.gold) < heroLevelCost(h.lvl)}>
+        <button onclick={() => levelUpHero(id)} disabled={Number($save.gold) < heroLevelCost(h.lvl)}>
           {ru.action.upgrade} {fmt(heroLevelCost(h.lvl))}
         </button>
       </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
   // Четыре рекламные кнопки. Провайдер stub показывает экран "RVPower" и выдаёт награду.
-  import { state, addGold } from '../game';
+  import { save, addGold } from '../game';
   import { floorGold } from '../sim/economy';
   import economy from '../data/economy.json';
   import ru from '../data/i18n/ru.json';
@@ -15,18 +15,18 @@
     await new Promise(r => setTimeout(r, A.stubScreenSec * 1000));
     showing = null;
     const now = Date.now();
-    const s = get(state);
-    if (kind === 'speed') state.update(x => ({ ...x, ads: { ...x.ads, speedUntil: Math.min(Math.max(now, x.ads.speedUntil) + A.speed.durationMin * 60e3, now + A.speed.maxStackMin * 60e3) } }));
-    if (kind === 'boost') state.update(x => ({ ...x, ads: { ...x.ads, boostUntil: now + A.boost.durationMin * 60e3 } }));
-    if (kind === 'gems') state.update(x => ({ ...x, gems: x.gems + A.gems.gems, ads: { ...x.ads, gemsToday: x.ads.gemsToday + 1 } }));
-    if (kind === 'resources') { addGold(floorGold(s.floor) * A.resources.goldHoursOfFloor * 360); state.update(x => ({ ...x, floorPoints: x.floorPoints + A.resources.floorPoints, ads: { ...x.ads, resourcesToday: x.ads.resourcesToday + 1 } })); }
+    const s = get(save);
+    if (kind === 'speed') save.update(x => ({ ...x, ads: { ...x.ads, speedUntil: Math.min(Math.max(now, x.ads.speedUntil) + A.speed.durationMin * 60e3, now + A.speed.maxStackMin * 60e3) } }));
+    if (kind === 'boost') save.update(x => ({ ...x, ads: { ...x.ads, boostUntil: now + A.boost.durationMin * 60e3 } }));
+    if (kind === 'gems') save.update(x => ({ ...x, gems: x.gems + A.gems.gems, ads: { ...x.ads, gemsToday: x.ads.gemsToday + 1 } }));
+    if (kind === 'resources') { addGold(floorGold(s.floor) * A.resources.goldHoursOfFloor * 360); save.update(x => ({ ...x, floorPoints: x.floorPoints + A.resources.floorPoints, ads: { ...x.ads, resourcesToday: x.ads.resourcesToday + 1 } })); }
   }
 </script>
 
 <div class="ads">
   <button onclick={() => watch('speed')}>▶ {ru.ads.speed}</button>
-  <button onclick={() => watch('resources')} disabled={$state.ads.resourcesToday >= A.resources.perDay}>▶ {ru.ads.resources}</button>
-  <button onclick={() => watch('gems')} disabled={$state.ads.gemsToday >= A.gems.perDay}>▶ {ru.ads.gems}</button>
+  <button onclick={() => watch('resources')} disabled={$save.ads.resourcesToday >= A.resources.perDay}>▶ {ru.ads.resources}</button>
+  <button onclick={() => watch('gems')} disabled={$save.ads.gemsToday >= A.gems.perDay}>▶ {ru.ads.gems}</button>
   <button onclick={() => watch('boost')}>▶ {ru.ads.boost}</button>
 </div>
 

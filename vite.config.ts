@@ -20,5 +20,6 @@ export default defineConfig({
     }),
   ],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+  build: { target: 'es2022' },
   test: { include: ['tests/**/*.test.ts'] },
 });
