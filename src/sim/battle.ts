@@ -7,7 +7,7 @@ import { mulberry32 } from './rng';
 import { raceMult } from './races';
 import { spawnWave, newId, resetIds } from './floor';
 import { floorGold } from './economy';
-import type { BattleState, Unit, Race, Stats, CreepType } from './types';
+import type { BattleState, Unit, Race, Stats, CreepType, WaveGen } from './types';
 
 const DT = economy.tickMs / 1000;
 const WAVES = economy.floor.wavesPerFloor;
@@ -19,7 +19,7 @@ export interface PartyMember {
   creeps: { type: CreepType; race: Race; stats: Stats; heal?: number }[];
 }
 
-export function createBattle(floor: number, party: PartyMember[], seed: number): BattleState {
+export function createBattle(floor: number, party: PartyMember[], seed: number, waveGen?: WaveGen): BattleState {
   resetIds();
   const units: Unit[] = [];
   party.forEach((m, i) => {
@@ -31,8 +31,8 @@ export function createBattle(floor: number, party: PartyMember[], seed: number):
       units.push(u);
     });
   });
-  const s: BattleState = { floor, wave: 1, tick: 0, units, seed, rngState: seed, goldEarned: 0, finished: null };
-  s.units.push(...spawnWave(floor, 1, ENEMY_START_X));
+  const s: BattleState = { floor, wave: 1, tick: 0, units, seed, rngState: seed, goldEarned: 0, finished: null, waveGen };
+  s.units.push(...(waveGen ? waveGen(1, ENEMY_START_X) : spawnWave(floor, 1, ENEMY_START_X)));
   return s;
 }
 
@@ -48,10 +48,10 @@ export function step(s: BattleState): BattleState {
   const enemy = s.units.filter(u => u.alive && u.side === 'enemy');
   if (party.length === 0) { s.finished = 'lose'; return s; }
   if (enemy.length === 0) {
-    if (s.wave >= WAVES) { s.finished = 'win'; s.goldEarned += floorGold(s.floor) * 0.4; return s; }
+    if (!s.waveGen && s.wave >= WAVES) { s.finished = 'win'; s.goldEarned += floorGold(s.floor) * 0.4; return s; }
     s.wave++;
     const frontX = Math.max(...party.map(u => u.x));
-    s.units.push(...spawnWave(s.floor, s.wave, frontX + ENEMY_START_X));
+    s.units.push(...(s.waveGen ? s.waveGen(s.wave, frontX + ENEMY_START_X) : spawnWave(s.floor, s.wave, frontX + ENEMY_START_X)));
     s.tick++;
     return s;
   }

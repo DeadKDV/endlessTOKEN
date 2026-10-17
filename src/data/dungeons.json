@@ -1,0 +1,7 @@
+[
+  { "id": "crypt", "race": "undead", "resource": "bone" },
+  { "id": "grove", "race": "elf", "resource": "leaf" },
+  { "id": "mine", "race": "dwarf", "resource": "ore" },
+  { "id": "citadel", "race": "human", "resource": "seal" },
+  { "id": "arena", "race": "orc", "resource": "totem" }
+]

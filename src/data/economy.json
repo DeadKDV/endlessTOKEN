@@ -5,10 +5,10 @@
   "rewards": { "goldBase": 10, "goldGrowth": 1.10, "floorPointsPerN": 5 },
   "hero": { "costBase": 15, "costGrowth": 1.08, "atkGrowth": 1.07, "hpGrowth": 1.06, "milestoneEvery": 10, "milestoneMult": 1.5, "formMult": [1.0, 1.8, 3.2], "creepsPerForm": [4, 6, 10], "formUnlock": { "awakening": { "floors": 50, "floorPoints": 500 }, "union": { "petLevel": 10 } } },
   "party": { "slotsAtFloor": [1, 10, 25, 50, 100], "monoRaceAtkMult": 1.15, "rainbowCreepMult": 1.10 },
-  "pets": { "maxLevel": 30, "foodCostPerLevel": 5, "foodCostPower": 2, "statPerLevel": 0.05, "creepEveryLevels": 5, "passiveAt": 5, "unionAt": 10, "auraAt": 20, "noCooldownAt": 30, "eggEveryFloors": 10 },
+  "pets": { "maxLevel": 30, "foodCostPerLevel": 5, "foodCostPower": 2, "statPerLevel": 0.05, "creepEveryLevels": 5, "passiveAt": 5, "unionAt": 10, "auraAt": 20, "noCooldownAt": 30, "eggEveryFloors": 10, "foodPerBoss": 5, "dailyFood": 5 },
   "prestige": { "divisor": 10, "power": 1.5, "tavernPerLevel": 0.02, "crystalAtkMultPer": 0.01, "crystalGoldMultPer": 0.01, "heroSummonCost": 50 },
   "offline": { "baseHours": 8, "maxHours": 24 },
-  "dungeons": { "durationSec": 60, "runsPerDay": 3, "resourcePerWave": 10 },
+  "dungeons": { "durationSec": 60, "runsPerDay": 3, "resourcePerWave": 10, "floorScale": 0.8, "waveGrowth": 1.08 },
   "ads": {
     "speed":     { "mult": 2, "durationMin": 30, "cooldownMin": 30, "maxStackMin": 120 },
     "resources": { "goldHoursOfFloor": 2, "floorPoints": 20, "dungeonResource": 30, "perDay": 6 },
