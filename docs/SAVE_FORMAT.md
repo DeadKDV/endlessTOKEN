@@ -1,15 +1,18 @@
-# Формат сейва (v1)
+# Формат сейва (v2)
 
 `GameState` из `src/sim/types.ts`. Хранится в localStorage (`rv-tycoon.save.v1`, JSON → lz-string base64) и в `saves.state` (jsonb) в Supabase. Золото — строка (Decimal), остальное — числа.
 
 ```json
 {
-  "v": 1,
+  "v": 2,
   "savedAt": 1760712000000,
-  "floor": 137, "maxFloor": 212,
+  "floor": 137, "maxFloor": 212, "runMaxFloor": 150,
   "gold": "4.21e19", "floorPoints": 3840, "crystals": 95, "petFood": 12, "gems": 40,
   "resources": { "bone": 1200, "leaf": 340, "ore": 0, "seal": 0, "totem": 0 },
-  "heroes": { "morven": { "lvl": 184, "form": 2, "pet": 12, "artifacts": ["skull_lich"] } },
+  "heroes": { "morven": { "lvl": 184, "form": 2, "pet": 12, "artifacts": ["skull_lich"], "floorsInParty": 77 } },
+  "artifacts": { "skull_lich": 7 },
+  "perks": { "permGold": false },
+  "dailyFoodDay": "2026-10-17",
   "party": ["morven", "groul", "silva", "valtor", "mortis"],
   "village": { "barracks_undead": 61, "range": 14 },
   "base": { "mine": 88, "storage": 20, "portal": 25 },
@@ -21,3 +24,12 @@
 
 Миграции — словарь `migrations[v]` в `src/save/storage.ts`: при изменении схемы поднять `v`, добавить функцию v→v+1.
 Конфликт локального и облачного сейва: берётся тот, где `savedAt` больше; при расхождении `maxFloor` > 20 этажей — показать игроку выбор.
+
+## Изменения v1 → v2
+- `runMaxFloor` — лучший этаж текущего забега (сбрасывается воскрешением); от него считаются кристаллы. `maxFloor` — рекорд за всё время (слоты отряда, яйца).
+- `heroes[id].floorsInParty` — этажей пройдено с героем в отряде (условие пробуждения: 50). `pet`: 0 — петомца нет, >=1 — уровень.
+- `artifacts` — купленные артефакты id → уровень 1..50; надетые лежат в `heroes[id].artifacts` (не больше слотов героя).
+- `perks.permGold` — разовая покупка «золото ×1.1»; `dailyFoodDay` — дата (локальная) последнего забранного дневного корма.
+- `dungeonRuns.date` — локальная дата YYYY-MM-DD; при её смене счётчики входов считаются нулевыми.
+- Миграция `migrations[1]`: `runMaxFloor = maxFloor`, `artifacts = {}`, `perks.permGold = false`, `dailyFoodDay = ''`, `floorsInParty = 0` у всех героев.
+

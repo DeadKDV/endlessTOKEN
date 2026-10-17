@@ -1,4 +1,5 @@
 import economy from '../data/economy.json';
+import { partyArtifactSum } from './artifacts';
 import type { GameState } from './types';
 
 export function crystalsFor(maxFloor: number, tavernLevel: number): number {
@@ -11,10 +12,29 @@ export function crystalMult(crystals: number): number {
   return 1 + crystals * economy.prestige.crystalAtkMultPer;
 }
 
-/** Сброс при престиже: возвращает новый стейт (иммутабельно). */
+/** Сколько кристаллов даст воскрешение сейчас: этаж забега, Таверна и артефакты кристаллов. */
+export function prestigeGain(s: GameState): number {
+  return Math.floor(crystalsFor(s.runMaxFloor, s.base.tavern ?? 0) * (1 + partyArtifactSum(s, 'crystal_mult')));
+}
+
+/** Сброс при престиже: этаж, золото, уровни героев. Деревня, база, петомцы, формы, артефакты, ресурсы остаются. */
 export function applyPrestige(s: GameState): GameState {
-  const gained = crystalsFor(s.maxFloor, s.base.tavern ?? 0);
+  const gained = prestigeGain(s);
+  if (gained < 1) return s;
   const heroes: GameState['heroes'] = {};
   for (const [id, h] of Object.entries(s.heroes)) heroes[id] = { ...h, lvl: 1 };
-  return { ...s, floor: 1, gold: '0', crystals: s.crystals + gained, heroes };
+  return { ...s, floor: 1, runMaxFloor: 1, gold: '0', crystals: s.crystals + gained, heroes };
+}
+
+/** Множитель золота: кристаллы × артефакты золота × вечная покупка за самоцветы (×1.1). */
+export function goldMult(s: GameState): number {
+  return (1 + s.crystals * economy.prestige.crystalGoldMultPer) * (1 + partyArtifactSum(s, 'gold_mult'))
+    * (s.perks.permGold ? economy.gems.permanentGold.mult : 1);
+}
+
+/** Магазин: постоянный ×1.1 к золоту за 1000 самоцветов, один раз. */
+export function buyPermGold(s: GameState): GameState {
+  const c = economy.gems.permanentGold.cost;
+  if (s.perks.permGold || s.gems < c) return s;
+  return { ...s, gems: s.gems - c, perks: { ...s.perks, permGold: true } };
 }

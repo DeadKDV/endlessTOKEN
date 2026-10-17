@@ -33,7 +33,7 @@ export function spawnWave(n: number, w: number, startX: number): Unit[] {
   return units;
 }
 
-function makeUnit(kind: Unit['kind'], race: Unit['race'], refId: string, x: number, hp: number, atk: number, atkSpeed: number, range: number): Unit {
+export function makeUnit(kind: Unit['kind'], race: Unit['race'], refId: string, x: number, hp: number, atk: number, atkSpeed: number, range: number): Unit {
   return {
     id: newId(), side: 'enemy', race, kind, refId, x,
     hp, maxHp: hp,

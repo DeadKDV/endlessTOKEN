@@ -90,7 +90,7 @@ describe('способности', () => {
 describe('интеграция', () => {
   const full = (id: string) => {
     const s = newGameState(0);
-    s.heroes[id] = { lvl: 30, form: 2, pet: 10, artifacts: [] };
+    s.heroes[id] = { lvl: 30, form: 2, pet: 10, artifacts: [], floorsInParty: 0 };
     s.party = [id];
     return buildParty(s);
   };

@@ -69,6 +69,9 @@ export interface Unit {
   expireTick?: number;
 }
 
+/** Свой генератор волн (подземелья): волна w (1-based) со стартом в x. Без него — обычный этаж. */
+export type WaveGen = (wave: number, startX: number) => Unit[];
+
 export interface BattleState {
   floor: number;
   wave: number;
@@ -80,15 +83,18 @@ export interface BattleState {
   finished: null | 'win' | 'lose';
   zones?: Zone[];
   goldMult?: number;
+  waveGen?: WaveGen;
 }
 
-export interface HeroSave { lvl: number; form: 0 | 1 | 2; pet: number; artifacts: string[] }
+/** pet: 0 = петомца нет, >=1 — его уровень. floorsInParty — этажей пройдено с героем в отряде (для пробуждения). */
+export interface HeroSave { lvl: number; form: 0 | 1 | 2; pet: number; artifacts: string[]; floorsInParty: number }
 
 export interface GameState {
   v: number;
   savedAt: number;
   floor: number;
   maxFloor: number;
+  runMaxFloor: number;     // макс. этаж текущего забега: от него кристаллы престижа
   gold: string;            // Decimal как строка
   floorPoints: number;
   crystals: number;
@@ -97,6 +103,9 @@ export interface GameState {
   resources: Record<'bone' | 'leaf' | 'ore' | 'seal' | 'totem', number>;
   heroes: Record<string, HeroSave>;
   party: string[];
+  artifacts: Record<string, number>; // купленные артефакты → уровень 1..50
+  perks: { permGold: boolean };      // разовые покупки за самоцветы
+  dailyFoodDay: string;              // дата последнего забранного дневного корма
   village: Record<string, number>;
   base: Record<string, number>;
   creepMix: Record<CreepType, number>;
