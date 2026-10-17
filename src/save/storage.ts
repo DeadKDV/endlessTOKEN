@@ -1,6 +1,7 @@
 import LZString from 'lz-string';
 import type { GameState } from '../sim/types';
 import { newGameState } from '../sim/party';
+import { newQuests } from '../sim/quests';
 
 const KEY = 'rv-tycoon.save.v1';
 
@@ -17,6 +18,8 @@ const migrations: Record<number, (s: any) => any> = {
   2: s => ({ ...s, v: 3, perks: { permGold: false, ...s.perks, starterPack: false } }),
   // v3 → v4: переключатель авто-прохода этажей («Остаться на этаже»); по умолчанию включён, как раньше
   3: s => ({ ...s, v: 4, autoAdvance: true }),
+  // v4 → v5: счётчики статистики, задания дня и ступени достижений (день и задания заполняются при первом событии)
+  4: s => ({ ...s, v: 5, quests: newQuests() }),
 };
 
 export function migrate(s: any): GameState {

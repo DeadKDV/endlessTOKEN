@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { save, heroCard, dungeonRun } from '../game';
+  import { save, heroCard, dungeonRun, questsOpen } from '../game';
   import BattleTab from './tabs/BattleTab.svelte';
   import HeroesTab from './tabs/HeroesTab.svelte';
   import VillageTab from './tabs/VillageTab.svelte';
@@ -9,6 +9,7 @@
   import ShopTab from './tabs/ShopTab.svelte';
   import HeroCard from './HeroCard.svelte';
   import Popups from './Popups.svelte';
+  import QuestsPopup from './QuestsPopup.svelte';
   import FloorStrip from './FloorStrip.svelte';
   import Toast from './Toast.svelte';
   import { tabHasPurchase, type Tab } from './progress';
@@ -46,6 +47,7 @@
 </nav>
 
 {#if $heroCard && $save.heroes[$heroCard]}<HeroCard id={$heroCard} onclose={() => heroCard.set(null)} />{/if}
+{#if $questsOpen}<QuestsPopup />{/if}
 <Toast />
 <Popups />
 

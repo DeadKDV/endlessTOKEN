@@ -3,6 +3,7 @@ import economy from '../data/economy.json';
 import type { GameState } from '../sim/types';
 import { BUILDINGS, buyBuilding } from '../sim/buildings';
 import { buyHeroLevels } from '../sim/heroes';
+import { questsClaimable } from '../sim/quests';
 import { DUNGEONS, dungeonUnlocked, runsLeft } from '../sim/dungeons';
 
 /** Сколько этажей до босса; 0 — текущий этаж боссовый. */
@@ -20,3 +21,6 @@ export function tabHasPurchase(s: GameState, tab: Tab, nowMs: number, inDungeon 
     default: return false;
   }
 }
+
+/** Есть ли награда за задания или достижения (точка на кнопке «Задания»). */
+export const questsDot = (s: GameState, nowMs: number) => questsClaimable(s, nowMs);

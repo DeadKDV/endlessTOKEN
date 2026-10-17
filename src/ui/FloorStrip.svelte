@@ -1,9 +1,9 @@
 <script lang="ts">
   // Полоса прогресса этажа над панелью: до босса, лучший этаж, переключатель «Остаться на этаже».
-  import { save, toggleAutoAdvance } from '../game';
+  import { save, toggleAutoAdvance, questsOpen } from '../game';
   import { autoAdvanceOn } from '../save/autoAdvance';
   import economy from '../data/economy.json';
-  import { floorsToBoss } from './progress';
+  import { floorsToBoss, questsDot } from './progress';
   import { t, tpl } from './text';
 
   const k = $derived(floorsToBoss($save.floor));
@@ -16,6 +16,7 @@
     <span class="line">{tpl(k ? t.progress.toBoss : t.progress.boss, { n: $save.floor, k })} <span class="muted">· {tpl(t.progress.best, { n: $save.maxFloor })}</span></span>
     <span class="bar"><span style="width:{pct}%"></span></span>
   </div>
+  <button class="quests" aria-label={t.quests.open} title={t.quests.open} onclick={() => questsOpen.set(true)}><span class="scroll"></span>{#if questsDot($save, Date.now())}<i class="dot" role="img" aria-label={t.quests.dot}></i>{/if}</button>
   <button class:on={stay} aria-pressed={stay} title={stay ? t.progress.stayTitle : t.progress.advanceTitle} onclick={toggleAutoAdvance}>{stay ? '⟳' : '▲'} {t.progress.stay}</button>
 </div>
 
@@ -26,5 +27,9 @@
   .bar { height: 5px; background: #0c0c1a; border-radius: 3px; overflow: hidden; }
   .bar span { display: block; height: 100%; background: #ffd54f; transition: width 0.3s; }
   button { flex: none; white-space: nowrap; }
+  .quests { position: relative; width: 40px; padding: 0; }
+  /* свиток: прямоугольник с «строками» текста */
+  .scroll { display: block; width: 18px; height: 22px; margin: 0 auto; border: 2px solid #ffd54f; border-radius: 3px; background: repeating-linear-gradient(#ffd54f 0 2px, transparent 2px 5px) 3px 4px / 8px 14px no-repeat; }
+  .dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: #ff5252; }
   button.on { border-color: #ffd54f; color: #ffd54f; }
 </style>

@@ -16,12 +16,17 @@ import { applyPrestige, buyPermGold, claimStarterPack, goldMult } from './sim/pr
 import {
   createDungeonBattle, dungeonReward, dungeonUnlocked, grantDungeonReward, resetRuns, runsLeft, spendRun, stepDungeon,
 } from './sim/dungeons';
+import { claimAchievement, claimChest, claimDaily, recordEvent, type Stats } from './sim/quests';
 import { loadLocal, saveLocal } from './save/storage';
 import { autoAdvanceOn } from './save/autoAdvance';
 import { t, tpl } from './ui/text';
 import economy from './data/economy.json';
 
 export const save = writable<GameState>(loadLocal());
+/** Попап «Задания». */
+export const questsOpen = writable(false);
+/** Засчитать события в статистику и задания дня. */
+export const track = (ev: Partial<Stats>) => save.update(s => recordEvent(s, Date.now(), ev));
 export const battle = writable<BattleState | null>(null);
 export const offlinePopup = writable<{ gold: number; seconds: number; capped: boolean } | null>(null);
 /** Герой, получивший яйцо петомца (попап). */
@@ -91,6 +96,7 @@ function onFloorLose(b: BattleState) {
 }
 
 function onFloorWin(b: BattleState) {
+  track({ floorsCleared: 1, bossesKilled: isBossFloor(get(save).floor) ? 1 : 0 });
   if (!autoAdvanceOn(get(save))) { // «Остаться на этаже»: только золото, этаж повторяется
     save.update(s => ({ ...s, gold: (Number(s.gold) + b.goldEarned * goldMult(s)).toString() }));
     startFloor();
@@ -118,6 +124,7 @@ function onFloorWin(b: BattleState) {
 function finishDungeon(id: string, b: BattleState) {
   const amount = dungeonReward(b);
   save.update(s => grantDungeonReward(s, id, amount));
+  track({ dungeonsRun: 1 });
   dungeonResult.set({ id, waves: b.wave - 1, amount });
   dungeonRun.set(null);
   startFloor();
@@ -134,9 +141,21 @@ function act(fn: (s: GameState) => GameState, restart = false) {
   if (restart) startFloor();
 }
 
-export const levelUpHero = (id: string, count: number | 'max' = 1) => act(s => buyHeroLevels(s, id, count), true);
-export const buyBuildingAction = (id: string, count: number | 'max' = 1) =>
+const sumLevels = (s: GameState) => Object.values(s.heroes).reduce((n, h) => n + h.lvl, 0);
+const sumBuildings = (s: GameState) => Object.values(s.village).reduce((n, v) => n + v, 0) + Object.values(s.base).reduce((n, v) => n + v, 0);
+export const levelUpHero = (id: string, count: number | 'max' = 1) => {
+  const before = sumLevels(get(save));
+  act(s => buyHeroLevels(s, id, count), true);
+  const n = sumLevels(get(save)) - before; if (n > 0) track({ levelsBought: n });
+};
+export const buyBuildingAction = (id: string, count: number | 'max' = 1) => {
+  const before = sumBuildings(get(save));
   act(s => buyBuilding(s, id, count), buildingById(id)?.zone === 'village');
+  const n = sumBuildings(get(save)) - before; if (n > 0) track({ buildingLevels: n });
+};
+export const claimDailyQuest = (id: string) => act(s => claimDaily(s, Date.now(), id));
+export const claimQuestChest = () => act(s => claimChest(s, Date.now()));
+export const claimAchievementAction = (id: string) => act(s => claimAchievement(s, id));
 export const feedPetAction = (id: string) => act(s => feedPet(s, id), true);
 export const awakenHero = (id: string) => act(s => awaken(s, id), true);
 export const uniteHero = (id: string) => act(s => unite(s, id), true);
@@ -161,7 +180,9 @@ export const buyPermGoldAction = () => act(buyPermGold);
 /** Воскрешение: сброс этажа, золота и уровней героев. Во время подземелья недоступно. */
 export function prestige() {
   if (get(dungeonRun)) return;
+  const before = get(save);
   act(applyPrestige, true);
+  if (get(save).floor !== before.floor || get(save).crystals !== before.crystals) track({ prestiges: 1 });
 }
 
 /** Войти в подземелье: списывает вход и запускает 60-секундный бой на той же сцене. */

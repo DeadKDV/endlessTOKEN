@@ -1,6 +1,6 @@
 <script lang="ts">
   // Четыре рекламные кнопки. Провайдер stub показывает экран "RVPower" и выдаёт награду.
-  import { save, addGold } from '../game';
+  import { save, addGold, track } from '../game';
   import { floorGold } from '../sim/economy';
   import economy from '../data/economy.json';
   import ru from '../data/i18n/ru.json';
@@ -14,6 +14,7 @@
     showing = A.stubScreenText;
     await new Promise(r => setTimeout(r, A.stubScreenSec * 1000));
     showing = null;
+    track({ adsWatched: 1 });
     const now = Date.now();
     const s = get(save);
     if (kind === 'speed') save.update(x => ({ ...x, ads: { ...x.ads, speedUntil: Math.min(Math.max(now, x.ads.speedUntil) + A.speed.durationMin * 60e3, now + A.speed.maxStackMin * 60e3) } }));
