@@ -1,13 +1,10 @@
-/**
- * Тик боя. Детерминирован: одинаковые входы + seed → одинаковый исход (нужно для сервера).
- * Способности героев пока не исполняются — есть точка расширения `applyAbilities`.
- */
+/** Тик боя. Детерминирован: одинаковые входы + seed → одинаковый исход (нужно для сервера). Способности — в abilities.ts. */
 import economy from '../data/economy.json';
 import { mulberry32 } from './rng';
-import { raceMult } from './races';
 import { spawnWave, newId, resetIds } from './floor';
 import { floorGold } from './economy';
-import type { BattleState, Unit, Race, Stats, CreepType } from './types';
+import { applyAbilities, initAbilities, pickTarget, basicAttack, atkSpeedOf, rangeOf, moveSpeedOf, isStunned } from './abilities';
+import type { BattleState, Unit, Race, Stats, CreepType, Ability } from './types';
 
 const DT = economy.tickMs / 1000;
 const WAVES = economy.floor.wavesPerFloor;
@@ -17,13 +14,17 @@ const ENEMY_START_X = 10;
 export interface PartyMember {
   heroId: string; race: Race; stats: Stats;
   creeps: { type: CreepType; race: Race; stats: Stats; heal?: number }[];
+  abilities: Ability[];
 }
 
 export function createBattle(floor: number, party: PartyMember[], seed: number): BattleState {
   resetIds();
   const units: Unit[] = [];
   party.forEach((m, i) => {
-    units.push(mkUnit('party', m.race, 'hero', m.heroId, PARTY_START_X - i * 0.5, m.stats));
+    const hero = mkUnit('party', m.race, 'hero', m.heroId, PARTY_START_X - i * 0.5, m.stats);
+    hero.abilities = m.abilities;
+    hero.cds = m.abilities.map(() => 0);
+    units.push(hero);
     m.creeps.forEach((c, j) => {
       const off = c.type === 'infantry' ? 0.8 : c.type === 'ranged' ? -1.0 : -1.5;
       const u = mkUnit('party', c.race, 'creep', `${c.race}_${c.type}`, PARTY_START_X + off - j * 0.3 - i * 0.5, c.stats);
@@ -33,6 +34,7 @@ export function createBattle(floor: number, party: PartyMember[], seed: number):
   });
   const s: BattleState = { floor, wave: 1, tick: 0, units, seed, rngState: seed, goldEarned: 0, finished: null };
   s.units.push(...spawnWave(floor, 1, ENEMY_START_X));
+  initAbilities(s);
   return s;
 }
 
@@ -48,18 +50,20 @@ export function step(s: BattleState): BattleState {
   const enemy = s.units.filter(u => u.alive && u.side === 'enemy');
   if (party.length === 0) { s.finished = 'lose'; return s; }
   if (enemy.length === 0) {
-    if (s.wave >= WAVES) { s.finished = 'win'; s.goldEarned += floorGold(s.floor) * 0.4; return s; }
+    if (s.wave >= WAVES) { s.finished = 'win'; s.goldEarned += floorGold(s.floor) * 0.4 * (s.goldMult ?? 1); return s; }
     s.wave++;
     const frontX = Math.max(...party.map(u => u.x));
     s.units.push(...spawnWave(s.floor, s.wave, frontX + ENEMY_START_X));
     s.tick++;
     return s;
   }
+  applyAbilities(s, rnd);
   for (const u of s.units) {
     if (!u.alive) continue;
+    if (isStunned(u, s.tick)) { u.attackCooldown -= DT; continue; }
     const foes = u.side === 'party' ? enemy : party;
-    const target = nearest(u, foes);
-    if (!target) continue;
+    const target = pickTarget(s, u, foes);
+    if (!target) { u.attackCooldown -= DT; continue; }
     const dist = Math.abs(target.x - u.x);
     // хилер: лечит союзника с наименьшим % HP вместо атаки
     if (u.healPower && u.attackCooldown <= 0) {
@@ -67,31 +71,20 @@ export function step(s: BattleState): BattleState {
       if (allies.length) {
         const low = allies.reduce((a, b) => (a.hp / a.maxHp < b.hp / b.maxHp ? a : b));
         low.hp = Math.min(low.maxHp, low.hp + u.healPower);
-        u.attackCooldown = 1 / u.stats.atkSpeed;
+        u.attackCooldown = 1 / atkSpeedOf(u, s.tick);
       }
     }
-    if (dist > u.stats.range) {
-      if (u.stats.moveSpeed > 0) u.x += Math.sign(target.x - u.x) * u.stats.moveSpeed * DT;
+    if (dist > rangeOf(u, s.tick)) {
+      const sp = moveSpeedOf(u, s.tick);
+      if (sp > 0) u.x += Math.sign(target.x - u.x) * sp * DT;
     } else if (u.attackCooldown <= 0 && !u.healPower) {
-      let dmg = u.stats.atk * raceMult(u.race, target.race);
-      if (rnd() < u.stats.crit) dmg *= u.stats.critDmg;
-      target.hp -= dmg;
-      if (target.hp <= 0) {
-        target.alive = false;
-        if (target.side === 'enemy') s.goldEarned += floorGold(s.floor) * 0.6 / (economy.floor.mobsPerWave * WAVES);
-      }
-      u.attackCooldown = 1 / u.stats.atkSpeed;
+      basicAttack(s, u, target, rnd);
+      u.attackCooldown = 1 / atkSpeedOf(u, s.tick);
     }
     u.attackCooldown -= DT;
   }
   s.tick++;
   return s;
-}
-
-function nearest(u: Unit, foes: Unit[]): Unit | undefined {
-  let best: Unit | undefined; let bd = Infinity;
-  for (const f of foes) { const d = Math.abs(f.x - u.x); if (d < bd) { bd = d; best = f; } }
-  return best;
 }
 
 /** Прогнать бой до конца или до maxTicks. Возвращает итог — то, что клиент шлёт серверу. */

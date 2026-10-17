@@ -9,7 +9,7 @@ import { creepCap, heroAtk, heroHp } from './economy';
 import { partyBonus } from './races';
 import { crystalMult } from './prestige';
 import type { PartyMember } from './battle';
-import type { CreepType, GameState, Race, Stats } from './types';
+import type { Ability, CreepType, GameState, Race, Stats } from './types';
 
 export const HEROES = [...undead, ...elf, ...dwarf, ...human, ...orc];
 export const heroById = (id: string) => HEROES.find(h => h.id === id);
@@ -43,7 +43,9 @@ export function buildParty(s: GameState): PartyMember[] {
           stats: { hp: t.hp * g, atk: t.atk * g, atkSpeed: t.atkSpeed, crit: 0, critDmg: 1.5, range: t.range, moveSpeed: t.moveSpeed } });
       }
     }
-    return { heroId: id, race: h.race as Race, stats, creeps };
+    const abilities = h.forms.slice(0, sv.form + 1).flatMap(f => f.abilities as unknown as Ability[]);
+    if (sv.pet >= 5) abilities.push(h.pet.passive as unknown as Ability);
+    return { heroId: id, race: h.race as Race, stats, creeps, abilities };
   });
 }
 

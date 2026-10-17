@@ -6,3 +6,4 @@ export * from './battle';
 export * from './prestige';
 export * from './offline';
 export { mulberry32 } from './rng';
+export * from './abilities';

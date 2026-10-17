@@ -14,6 +14,35 @@ export interface Stats {
   moveSpeed: number; // клетки/сек
 }
 
+/** Способность из data/heroes/*.json. Набор полей зависит от kind (см. schema.md). */
+export interface Ability {
+  id: string;
+  name?: { ru: string; en: string };
+  kind: string;
+  value?: number;
+  duration?: number;
+  cooldown?: number;
+  targets?: number;
+  radius?: number;
+  stat?: string;
+  cap?: number;
+  hits?: number;
+  ignoreArmor?: boolean;
+  count?: number;
+  hp?: number;
+  root?: number;
+  stun?: number;
+  critFar?: boolean;
+  selfHeal?: number;
+  hpThreshold?: number;
+  cost?: number;
+}
+
+/** Временный эффект на юните; until — тик, до которого (не включая) он действует. */
+export interface Effect { k: string; v: number; until: number; src?: string }
+
+export interface Zone { x: number; radius: number; dmg: number; side: Side; src: number; until: number; next: number }
+
 export interface Unit {
   id: number;
   side: Side;
@@ -27,6 +56,17 @@ export interface Unit {
   attackCooldown: number; // сек до следующей атаки
   healPower?: number;
   alive: boolean;
+  abilities?: Ability[];
+  cds?: number[];          // тики до готовности каждой способности
+  effects?: Effect[];
+  shield?: number;
+  shieldUntil?: number;
+  stacks?: number;         // stack_atk
+  doubleCast?: boolean;
+  revived?: boolean;
+  recalled?: boolean;
+  temp?: boolean;          // призванный/скелет/дух: не воскрешается и не считается крипом отряда
+  expireTick?: number;
 }
 
 export interface BattleState {
@@ -38,6 +78,8 @@ export interface BattleState {
   rngState: number;
   goldEarned: number;
   finished: null | 'win' | 'lose';
+  zones?: Zone[];
+  goldMult?: number;
 }
 
 export interface HeroSave { lvl: number; form: 0 | 1 | 2; pet: number; artifacts: string[] }
