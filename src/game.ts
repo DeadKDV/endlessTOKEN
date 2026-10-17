@@ -64,9 +64,19 @@ export function update(dtMs: number) {
     addGold(goldPerSec(s.base.mine ?? 0) * goldMult(s) * TICK / 1000);
     if (dungeon && b.finished) { finishDungeon(dungeon, b); return; }
     if (b.finished === 'win') { onFloorWin(b); return; }
-    if (b.finished === 'lose') { startFloor(); return; }
+    if (b.finished === 'lose') { onFloorLose(b); return; }
   }
   battle.set(b);
+}
+
+/** Поражение, как в Endless Frontier: золото за убитых остаётся, отряд откатывается на этаж назад и фармит. */
+function onFloorLose(b: BattleState) {
+  save.update(s => ({
+    ...s,
+    gold: (Number(s.gold) + b.goldEarned * goldMult(s)).toString(),
+    floor: Math.max(1, s.floor - 1),
+  }));
+  startFloor();
 }
 
 function onFloorWin(b: BattleState) {

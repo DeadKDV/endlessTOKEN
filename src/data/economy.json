@@ -1,6 +1,6 @@
 {
   "tickMs": 100,
-  "mob": { "hpBase": 50, "hpGrowth": 1.11, "hpStepEvery": 10, "hpStepMult": 1.5, "atkBase": 4, "atkGrowth": 1.09, "baseHpMult": 20 },
+  "mob": { "hpBase": 80, "hpGrowth": 1.11, "hpStepEvery": 10, "hpStepMult": 1.5, "atkBase": 10, "atkGrowth": 1.09, "baseHpMult": 20 },
   "floor": { "wavesPerFloor": 3, "mobsPerWave": 5, "bossEvery": 10, "raidBossEvery": 50, "bossHpMult": 5, "raidBossHpMult": 20, "raidBossTimerSec": 90 },
   "rewards": { "goldBase": 10, "goldGrowth": 1.10, "floorPointsPerN": 5 },
   "hero": { "costBase": 15, "costGrowth": 1.08, "atkGrowth": 1.07, "hpGrowth": 1.06, "milestoneEvery": 10, "milestoneMult": 1.5, "formMult": [1.0, 1.8, 3.2], "creepsPerForm": [4, 6, 10], "formUnlock": { "awakening": { "floors": 50, "floorPoints": 500 }, "union": { "petLevel": 10 } } },

@@ -6,8 +6,8 @@ import { computeOffline } from '../src/sim/offline';
 
 describe('формулы из DESIGN.md', () => {
   it('HP моба: 50·1.11^n·1.5^floor(n/10)', () => {
-    expect(mobHp(0)).toBeCloseTo(50);
-    expect(mobHp(10)).toBeCloseTo(50 * Math.pow(1.11, 10) * 1.5, 5);
+    expect(mobHp(0)).toBeCloseTo(80);
+    expect(mobHp(10)).toBeCloseTo(80 * Math.pow(1.11, 10) * 1.5, 5);
   });
   it('золото и очки этажа', () => {
     expect(floorGold(0)).toBe(10);
