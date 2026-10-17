@@ -20,6 +20,8 @@ const migrations: Record<number, (s: any) => any> = {
   3: s => ({ ...s, v: 4, autoAdvance: true }),
   // v4 → v5: счётчики статистики, задания дня и ступени достижений (день и задания заполняются при первом событии)
   4: s => ({ ...s, v: 5, quests: newQuests() }),
+  // v5 → v6: прогресс обучения; кто уже играл (этаж, второй герой, золото, стартовый набор) — обучение пропущено
+  5: s => ({ ...s, v: 6, tutorial: s.maxFloor > 1 || Object.keys(s.heroes ?? {}).length > 1 || Number(s.gold) > 0 || s.perks?.starterPack ? { done: [], skipped: true } : { done: [] } }),
 };
 
 export function migrate(s: any): GameState {

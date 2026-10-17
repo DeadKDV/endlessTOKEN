@@ -1,10 +1,10 @@
-# Формат сейва (v4)
+# Формат сейва (v6)
 
 `GameState` из `src/sim/types.ts`. Хранится в localStorage (`rv-tycoon.save.v1`, JSON → lz-string base64) и в `saves.state` (jsonb) в Supabase. Золото — строка (Decimal), остальное — числа.
 
 ```json
 {
-  "v": 5,
+  "v": 6,
   "savedAt": 1760712000000,
   "floor": 137, "maxFloor": 212, "runMaxFloor": 150,
   "gold": "4.21e19", "floorPoints": 3840, "crystals": 95, "petFood": 12, "gems": 40,
@@ -14,6 +14,7 @@
   "perks": { "permGold": false, "starterPack": true },
   "autoAdvance": true,
   "quests": { "stats": { "floorsCleared": 310, "bossesKilled": 30, "levelsBought": 2400, "buildingLevels": 180, "prestiges": 2, "dungeonsRun": 9, "adsWatched": 14 }, "day": "2026-10-17", "dayStats": { "floorsCleared": 12, "bossesKilled": 1, "levelsBought": 40, "buildingLevels": 0, "prestiges": 0, "dungeonsRun": 0, "adsWatched": 1 }, "daily": ["floors:1", "bosses:0", "levels:1", "ads:0", "buildings:1"], "dailyClaimed": ["floors:1"], "chestClaimed": false, "ach": { "maxFloor": 4, "heroes": 2 } },
+  "tutorial": { "done": ["level", "stay"], "skipped": false },
   "dailyFoodDay": "2026-10-17",
   "party": ["morven", "groul", "silva", "valtor", "mortis"],
   "village": { "barracks_undead": 61, "range": 14 },
@@ -48,3 +49,8 @@
 - `quests` (поле опционально, тип — в `src/sim/quests.ts`): `stats` — счётчики за всё время (этажи, боссы, купленные уровни героев, уровни зданий, воскрешения, пройденные подземелья, просмотренные ролики); `day` — локальная дата заданий, `dayStats` — те же счётчики за день; `daily` — id пяти заданий дня `вид:ступень` (данные в `src/data/quests.json`), `dailyClaimed` — забранные, `chestClaimed` — сундук дня; `ach` — достижение → сколько ступеней забрано. Лучший этаж и число героев в `stats` не дублируются — берутся из `maxFloor` и `heroes`.
 - При смене даты (`syncQuests`, вызывается на первом событии/открытии попапа) задания генерируются заново по дате, `dayStats`/`dailyClaimed`/`chestClaimed` обнуляются.
 - Миграция `migrations[4]`: `quests` = пустые счётчики; день и задания заполняются при первом событии.
+
+## Изменения v5 → v6
+- `tutorial` (поле опционально, тип — в `src/ui/tutorial.ts`): `done` — id закрытых подсказок обучения (`level`, `stay`, `village`, `quests`, `pet`, `prestige`), `skipped` — «Пропустить обучение» (подсказки больше не показываются). Нет поля = обучение не начато. Условия показа — в `TUTORIAL_STEPS`.
+- Миграция `migrations[5]`: если игрок уже играл (`maxFloor > 1`, больше одного героя, золото > 0 или взят стартовый набор) — `{ done: [], skipped: true }`, иначе `{ done: [] }`. `newGameState()` по-прежнему отдаёт v3 и проходит через `migrate`, поэтому новая игра получает пустой прогресс.
+- Прогресс в сейве, а не в localStorage: он едет вместе с облаком и импортом, а миграция отличает ветерана от новичка.

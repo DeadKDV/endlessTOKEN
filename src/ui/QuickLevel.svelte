@@ -7,7 +7,7 @@
   import { t, tpl } from './text';
 </script>
 
-<div class="quick" aria-label={t.progress.quick}>
+<div class="quick" data-tut="quick" aria-label={t.progress.quick}>
   {#each $save.party as id (id)}
     {@const h = $save.heroes[id]}
     {#if h}

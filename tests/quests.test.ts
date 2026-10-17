@@ -91,7 +91,7 @@ describe('сейв v5', () => {
   it('миграция v4 → v5: quests добавлены, остальное цело', () => {
     const v4 = { ...newGameState(D1), v: 4, autoAdvance: false, floor: 21, gems: 7 };
     const s = deserialize(LZString.compressToBase64(JSON.stringify(v4)));
-    expect(s.v).toBe(5);
+    expect(s.v).toBe(6);
     expect(s.floor).toBe(21); expect(s.gems).toBe(7); expect(s.autoAdvance).toBe(false);
     expect(s.quests!.stats.floorsCleared).toBe(0);
     expect(s.quests!.ach).toEqual({});

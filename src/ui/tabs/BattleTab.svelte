@@ -33,7 +33,7 @@
   </span>
 </div>
 
-<div class="row">
+<div class="row" data-tut="prestige">
   <span>{gain > 0 ? tpl(t.battle.prestigeGain, { n: gain }) : t.battle.prestigeLocked}</span>
   <button disabled={gain < 1 || !!$dungeonRun} onclick={() => prestigeAsk.set(true)}>{t.action.prestige}</button>
 </div>

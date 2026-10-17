@@ -12,6 +12,7 @@
   import QuestsPopup from './QuestsPopup.svelte';
   import FloorStrip from './FloorStrip.svelte';
   import Toast from './Toast.svelte';
+  import Tutorial from './Tutorial.svelte';
   import { tabHasPurchase, type Tab } from './progress';
   import { fmt } from './format';
   import { t } from './text';
@@ -42,7 +43,7 @@
 
 <nav>
   {#each tabs as k}
-    <button class:active={tab === k} onclick={() => (tab = k)}>{t.screen[k]}{#if tabHasPurchase($save, k, Date.now(), !!$dungeonRun)}<i class="dot" role="img" aria-label={t.progress.dot}></i>{/if}</button>
+    <button data-tut="nav-{k}" class:active={tab === k} onclick={() => (tab = k)}>{t.screen[k]}{#if tabHasPurchase($save, k, Date.now(), !!$dungeonRun)}<i class="dot" role="img" aria-label={t.progress.dot}></i>{/if}</button>
   {/each}
 </nav>
 
@@ -50,6 +51,7 @@
 {#if $questsOpen}<QuestsPopup />{/if}
 <Toast />
 <Popups />
+<Tutorial />
 
 <style>
   .top { position: absolute; top: 0; left: 0; right: 0; height: 40px; display: flex; justify-content: space-around; align-items: center; color: #fff; font: 14px monospace; background: #15152a; }

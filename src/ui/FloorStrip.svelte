@@ -16,8 +16,8 @@
     <span class="line">{tpl(k ? t.progress.toBoss : t.progress.boss, { n: $save.floor, k })} <span class="muted">· {tpl(t.progress.best, { n: $save.maxFloor })}</span></span>
     <span class="bar"><span style="width:{pct}%"></span></span>
   </div>
-  <button class="quests" aria-label={t.quests.open} title={t.quests.open} onclick={() => questsOpen.set(true)}><span class="scroll"></span>{#if questsDot($save, Date.now())}<i class="dot" role="img" aria-label={t.quests.dot}></i>{/if}</button>
-  <button class:on={stay} aria-pressed={stay} title={stay ? t.progress.stayTitle : t.progress.advanceTitle} onclick={toggleAutoAdvance}>{stay ? '⟳' : '▲'} {t.progress.stay}</button>
+  <button class="quests" data-tut="quests" aria-label={t.quests.open} title={t.quests.open} onclick={() => questsOpen.set(true)}><span class="scroll"></span>{#if questsDot($save, Date.now())}<i class="dot" role="img" aria-label={t.quests.dot}></i>{/if}</button>
+  <button data-tut="stay" class:on={stay} aria-pressed={stay} title={stay ? t.progress.stayTitle : t.progress.advanceTitle} onclick={toggleAutoAdvance}>{stay ? '⟳' : '▲'} {t.progress.stay}</button>
 </div>
 
 <style>
