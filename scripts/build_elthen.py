@@ -21,6 +21,7 @@ PACKS = {
     'witch':     ('witch/Witch Sprite Sheet.png', 32, 32, dict(idle=0, walk=1, attack=2, hurt=3, death=4)),
     'ghoul':     ('ghoul/Ghoul Sprite Sheet.png', 32, 32, dict(idle=0, walk=1, attack=2, hurt=3, death=4)),
     'goblin':    ('goblin-king/Goblin King Sprite Sheet.png', 64, 64, dict(idle=0, walk=1, attack=2, hurt=6, death=7)),
+    'fox':       ('fox/Fox Sprite Sheet.png', 32, 32, dict(idle=0, walk=1, attack=2, hurt=4, death=6)),
     'minotaur':  ('minotaur/Minotaur - Sprite Sheet.png', 96, 96, dict(idle=0, walk=1, attack=3, hurt=7, death=9)),
 }
 
@@ -123,6 +124,8 @@ def main():
             uid = f'{race}_{ref}'
             build(uid, pack, proj, MOB_TINT[race], sheets)
             ids.append(uid)
+    build('pet_fox', 'fox', None, None, sheets)  # петомец героя; расовую перекраску даёт рендер
+    ids.append('pet_fox')
     json.dump({'ids': ids}, open(os.path.join(OUT, 'index.json'), 'w'))
     print('собрано атласов:', len(ids))
 

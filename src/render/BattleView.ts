@@ -49,13 +49,20 @@ const CREEP_TYPE = new Map<string, CreepType>(
   (creeps.creeps as { id: string; type: CreepType }[]).map(c => [c.id, c.type]),
 );
 const FADE_MS = 300, FLASH_MS = 110, LUNGE_MS = 160;
+const PET_TINT: Record<string, number> = { elf: 0xb8f0a8, orc: 0x9cd67a, undead: 0xb8b0d8 }; // лиса Elthen перекрашивается по расе героя
+const PET_X = -14, PET_Y = -4;                   // где петомец стоит относительно героя: сзади и чуть выше
 const TEXT_SMALL = { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff };
 
 interface UnitView {
   root: Container; hp: Graphics; w: number; h: number; kind: Unit['kind']; dx: number; dy: number;
   sprite: Sprite; tex?: ProcTex; baseTint: number;
   lastX: number; lastCd: number; lunge: number; flash: number; moving: number;
+  sig: string; pet?: PetView; copies?: Sprite[]; glow?: Graphics;
   proto?: Proto; anim?: AnimatedSprite; form: number; cur: string; action: string; actionUntil: number; hurtAt: number;
+}
+interface PetView {
+  c: Container; spr: Sprite; anim?: AnimatedSprite; proto?: Proto; aura?: Graphics; ox: number; oy: number;
+  lastRx: number; lastT: number; lastLunge: number; cur: string; until: number;
 }
 type PopKind = 'dmg' | 'crit' | 'heal' | 'base';
 interface Proj {
@@ -112,7 +119,7 @@ export class BattleView {
     for (const u of s.units) {
       if (!u.alive || u.pending) continue;
       let v = this.views.get(u.id) ?? this.makeView(u);
-      if (!v.proto && this.protoOf(u)) { // атлас догрузился - заменяем процедурный спрайт анимированным
+      if ((!v.proto && this.protoOf(u)) || v.sig !== this.sigOf(u)) { // атлас догрузился или сменились форма/петомец - пересоздаём вид
         v.root.destroy({ children: true });
         v = this.makeView(u);
       }
@@ -141,6 +148,7 @@ export class BattleView {
       const half = v.sprite.width / 2;
       v.root.position.set(u.kind === 'base' ? Math.min(Math.max(px, 2 + (FIELD_L * CELL) + half), LOGICAL_W - 2 + FIELD_L * CELL - half) : px + v.dx, GROUND_Y + v.dy);
       v.root.zIndex = u.kind === 'base' ? 0 : GROUND_Y + v.dy;
+      if (v.pet) this.animatePet(v, v.pet, now);
       if (u.kind !== 'base') drawHp(v.hp, u, v.w, v.h);
     }
     this.lastHp = hp;
@@ -151,6 +159,7 @@ export class BattleView {
         else { this.fx.coins(v.root.x, v.root.y - v.h * 0.4, du.kind === 'boss' ? 8 : 2); sfx('coin'); }
       }
       if (du && du.kind !== 'base' && !du.temp) sfx('death');
+      for (const e of [...(v.copies ?? []), v.glow, v.pet?.c]) if (e) e.visible = false; // питомец и обводка исчезают сразу
       if (v.anim) this.setAnim(v, 'death', false, DEATH_MS);
       this.dying.push({ v, born: now, deb: v.kind === 'base' ? this.debris(v) : undefined }); this.views.delete(id);
     }
@@ -293,11 +302,17 @@ export class BattleView {
       if (now >= v.actionUntil) { v.action = ''; this.setAnim(v, now < v.moving ? 'walk' : 'idle', true); }
       v.sprite.x = now - v.hurtAt < HURT_MS ? -dir * 3 * (1 - (now - v.hurtAt) / HURT_MS) : 0;
       v.sprite.tint = now < v.flash ? 0xffaaaa : v.baseTint;
+      v.copies?.forEach((c, i) => {
+        c.texture = v.anim!.texture; c.scale.copyFrom(v.sprite.scale);
+        c.position.set(v.sprite.x + (i ? 1.5 : -1.5), v.sprite.y - 1.2);
+      });
+      this.pulseGlow(v, now);
       return;
     }
     const lt = (now - v.lunge) / LUNGE_MS;
     v.sprite.x = lt >= 0 && lt < 1 ? dir * 4 * Math.sin(Math.PI * lt) : 0;
     v.sprite.y = now < v.moving ? -Math.abs(Math.sin(now / 90 + u.id)) * 1.5 : 0;
+    this.pulseGlow(v, now);
     if (v.tex) v.sprite.texture = now < v.flash ? v.tex.flash : v.tex.tex;
     else v.sprite.tint = now < v.flash ? 0xffaaaa : v.baseTint;
   }
@@ -361,6 +376,7 @@ export class BattleView {
         sprite.width = w; sprite.height = h;
       }
     }
+    const extras = u.kind === 'hero' ? this.heroExtras(u, root, h, form, proto, anim) : {};
     root.addChild(sprite);
     const base = u.kind === 'base';
     const dy = base ? 0 : ((u.id % ROWS) - 1) * 7, dx = base ? 0 : (((u.id * 5) % 7) - 3) * 1.2; // только визуально
@@ -369,10 +385,102 @@ export class BattleView {
     this.world.addChild(root);
     const v: UnitView = {
       root, hp, w, h, kind: u.kind, dx, dy, sprite, tex, lastX: u.x, lastCd: u.attackCooldown, lunge: -1e9, flash: 0, moving: 0,
-      baseTint: proto?.tint ?? sprite.tint, proto, anim, form, cur: `f${form}_idle`, action: '', actionUntil: 0, hurtAt: -1e9,
+      baseTint: proto?.tint ?? sprite.tint, proto, sig: this.sigOf(u), ...extras, anim, form, cur: `f${form}_idle`, action: '', actionUntil: 0, hurtAt: -1e9,
     };
     this.views.set(u.id, v);
     return v;
+  }
+
+  /** Признак, при смене которого вид героя надо пересоздать: форма, ступень петомца, готовность атласа лисы. */
+  private sigOf(u: Unit): string {
+    if (u.kind !== 'hero') return '';
+    const h = get(save).heroes[u.refId], pet = h?.pet ?? 0;
+    if (pet > 0) void loadProto('pet_fox');
+    return `${h?.form ?? 0}|${pet >= 30 ? 3 : pet >= 20 ? 2 : pet >= 1 ? 1 : 0}|${peekProto('pet_fox') ? 1 : 0}`;
+  }
+
+  /** Заметность формы (золотая обводка двумя копиями, свечение под ногами у формы 2) и петомец; всё добавляется под спрайт героя. */
+  private heroExtras(u: Unit, root: Container, h: number, form: number, proto?: Proto, anim?: AnimatedSprite) {
+    const out: { glow?: Graphics; copies?: Sprite[]; pet?: PetView } = {};
+    if (form >= 2) {
+      out.glow = new Graphics().ellipse(0, -1, h * 0.42, 4).fill({ color: 0xffd54f, alpha: 0.35 }).ellipse(0, -1, h * 0.26, 2.5).fill({ color: 0xffe9a0, alpha: 0.5 });
+      root.addChild(out.glow);
+    }
+    out.pet = this.makePet(u, root);
+    const an = proto?.sheet.animations;
+    // у Elthen/Zerie одна внешность на все формы - отличаем обводкой; у атласов со своими кадрами формы уже разные
+    if (form >= 1 && anim && an && an.f1_idle?.[0] === an.f0_idle?.[0]) {
+      out.copies = [0, 1].map(() => {
+        const c = new Sprite(anim.texture);
+        c.anchor.copyFrom(anim.anchor); c.tint = 0xffd54f;
+        root.addChild(c);
+        return c;
+      });
+    }
+    return out;
+  }
+
+  private pulseGlow(v: UnitView, now: number) {
+    if (!v.glow) return;
+    const k = Math.sin(now / 260);
+    v.glow.alpha = 0.75 + 0.25 * k; v.glow.scale.set(1 + 0.1 * k, 1);
+  }
+
+  private makePet(u: Unit, root: Container): PetView | undefined {
+    const lvl = get(save).heroes[u.refId]?.pet ?? 0;
+    if (lvl < 1) return undefined;
+    const H = lvl >= 30 ? 22 : 16, proto = peekProto('pet_fox');
+    const c = new Container();
+    let spr: Sprite, anim: AnimatedSprite | undefined, aura: Graphics | undefined;
+    if (proto) {
+      anim = new AnimatedSprite(proto.sheet.animations.f0_idle);
+      anim.anchor.set(...(proto.anchors.f0 ?? [0.5, 1]));
+      anim.scale.set(H / (proto.charH.f0 || H));
+      anim.animationSpeed = 5 / 60; anim.tint = PET_TINT[u.race] ?? 0xffffff; anim.play();
+      spr = anim;
+    } else {
+      const t = procSprite({ race: u.race, enemy: false, kind: 'pet' });
+      spr = new Sprite(t.tex);
+      spr.anchor.set(0.5, 1); spr.scale.set(H / t.h);
+    }
+    if (lvl >= 20) { // аура петомца 20+
+      const col = orbColor(u.race);
+      aura = new Graphics().circle(0, -H / 2, H * 0.85).fill({ color: col, alpha: 0.16 }).circle(0, -H / 2, H * 0.55).fill({ color: col, alpha: 0.2 });
+      c.addChild(aura);
+    }
+    c.addChild(spr);
+    root.addChild(c);
+    c.position.set(PET_X, PET_Y);
+    return { c, spr, anim, proto, aura, ox: PET_X, oy: PET_Y, lastRx: NaN, lastT: performance.now(), lastLunge: -1e9, cur: 'f0_idle', until: 0 };
+  }
+
+  /** Петомец остаётся на месте мира, пока герой уходит вперёд, и догоняет к точке позади героя; рывок вместе с атакой героя. */
+  private animatePet(v: UnitView, p: PetView, now: number) {
+    const dt = Math.min(100, now - p.lastT);
+    p.lastT = now;
+    const rx = v.root.x;
+    if (!Number.isNaN(p.lastRx)) p.ox -= rx - p.lastRx;
+    p.lastRx = rx;
+    const k = 1 - Math.exp(-dt / 140), moving = now < v.moving;
+    const ty = PET_Y - (moving ? Math.abs(Math.sin(now / 100)) * 2 : 0);
+    p.ox = Math.min(PET_X + 10, Math.max(PET_X - 28, p.ox + (PET_X - p.ox) * k));
+    p.oy += (ty - p.oy) * k;
+    const lt = (now - v.lunge) / LUNGE_MS;
+    p.c.position.set(p.ox + (lt >= 0 && lt < 1 ? 9 * Math.sin(Math.PI * lt) : 0), p.oy);
+    if (p.aura) p.aura.alpha = 0.7 + 0.3 * Math.sin(now / 300);
+    const a = p.anim;
+    if (!a || !p.proto) return;
+    if (p.lastLunge !== v.lunge) { p.lastLunge = v.lunge; p.until = now + ATTACK_MS; this.setPetAnim(p, 'attack', false, ATTACK_MS); }
+    else if (now >= p.until) this.setPetAnim(p, moving || Math.abs(PET_X - p.ox) > 1.5 ? 'walk' : 'idle', true);
+  }
+
+  private setPetAnim(p: PetView, name: string, loop: boolean, durMs?: number) {
+    const key = `f0_${name}`, frames = p.proto!.sheet.animations[key], a = p.anim!;
+    if (!frames || (p.cur === key && loop)) return;
+    p.cur = key;
+    a.loop = loop; a.textures = frames;
+    a.animationSpeed = (durMs ? frames.length / (durMs / 1000) : name === 'walk' ? 12 : 5) / 60;
+    a.gotoAndPlay(0);
   }
 
   private debris(v: UnitView) {

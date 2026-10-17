@@ -5,7 +5,7 @@ import races from '../data/races.json';
 export type Grid = string[][];
 export type RGBA = [number, number, number, number];
 export interface SpriteSpec {
-  kind: 'hero' | 'creep' | 'mob' | 'boss' | 'base';
+  kind: 'hero' | 'creep' | 'mob' | 'boss' | 'base' | 'pet';
   race: Race;
   enemy: boolean;
   role?: Role;
@@ -65,6 +65,19 @@ function hero(race: Race, role: Role): Grid {
     R(g, 6, 3, 9, 3, ''); R(g, 6, 5, 9, 1, 'a'); R(g, 8, 3, 5, 2, 'a'); R(g, 9, 2, 3, 1, 'a');
     R(g, 17, 4, 1, 17, 'h'); R(g, 16, 1, 3, 3, 'g'); P(g, 16, 1, 'W');
   } else { R(g, 17, 2, 1, 19, 'h'); R(g, 18, 3, 2, 5, 'c'); P(g, 18, 5, 'W'); }
+  return g;
+}
+
+const PET_FOX = [
+  '..........d.d.', '..........aaaa', '..c.aaaaaaaaea', '.cc.aaaaaaaaWW', '.ccdaaaaaaaaaa',
+  '..c.aaaaaaaa..', '....aWWWWaa...', '....d.d..d.d..', '....d.d..d.d..',
+];
+/** Петомец, смотрит вправо: лиса, волк (тёмный хвост) или дракончик (крылья и шипы) — по расе героя. */
+function pet(race: Race): Grid {
+  const g = mk(14, 9);
+  stamp(g, 0, 0, PET_FOX);
+  if (race === 'orc' || race === 'undead') { for (let j = 0; j < 9; j++) for (let i = 0; i < 4; i++) if (g[j][i] === 'c') g[j][i] = 'd'; }
+  else if (race === 'dwarf') { R(g, 4, 0, 4, 2, 'c'); P(g, 5, 2, 'c'); P(g, 6, 2, 'c'); P(g, 10, 0, 'W'); P(g, 12, 0, 'W'); }
   return g;
 }
 
@@ -165,6 +178,7 @@ export function buildGrid(s: SpriteSpec): Grid {
   let g: Grid;
   if (s.kind === 'hero') g = hero(s.race, s.role ?? 'fighter');
   else if (s.kind === 'boss') g = boss(s.race, !!s.raid);
+  else if (s.kind === 'pet') g = pet(s.race);
   else if (s.kind === 'base') g = s.enemy ? fortress() : camp();
   else if (s.kind === 'mob') g = monster(s.race, s.ctype === 'ranged');
   else g = creep(s.race, s.ctype ?? 'infantry');
