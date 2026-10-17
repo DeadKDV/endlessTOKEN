@@ -68,25 +68,51 @@ function hero(race: Race, role: Role): Grid {
   return g;
 }
 
-function creep(race: Race, type: CreepType, mob: boolean): Grid {
+function creep(race: Race, type: CreepType): Grid {
   const g = mk(16, 16);
   R(g, 5, 11, 2, 4, 'd'); R(g, 9, 11, 2, 4, 'd'); R(g, 4, 15, 3, 1, 'k'); R(g, 9, 15, 3, 1, 'k');
   R(g, 4, 6, 8, 5, 'a'); R(g, 3, 6, 1, 4, 'a'); R(g, 12, 6, 1, 4, 'a'); R(g, 4, 9, 8, 1, 'c');
   R(g, 5, 2, 6, 4, 's'); R(g, 4, 1, 8, 2, 'a'); P(g, 9, 3, 'e');
   features(g, race, 5, 2, 6, 4, 1);
-  if (mob) { P(g, 4, 0, 'W'); P(g, 11, 0, 'W'); R(g, 4, 6, 8, 1, 'd'); }
   if (type === 'infantry') { R(g, 13, 3, 1, 8, 'w'); R(g, 12, 10, 3, 1, 'g'); }
   else if (type === 'ranged') stamp(g, 12, 4, BOW.slice(0, 7));
   else { R(g, 13, 3, 1, 12, 'h'); R(g, 13, 0, 1, 3, 'W'); R(g, 12, 1, 3, 1, 'W'); }
   return g;
 }
 
+/** Враги — монстры, не люди: череп, зверь, слизень, голем по расе; дальники несут светящийся шар. */
+function monster(race: Race, ranged: boolean): Grid {
+  const shape = ({ undead: 'skull', orc: 'beast', human: 'beast', elf: 'slime', dwarf: 'golem' } as const)[race];
+  let g: Grid;
+  if (shape === 'skull') {
+    g = mk(16, 14);
+    R(g, 3, 1, 10, 7, 'W'); R(g, 2, 3, 12, 4, 'W'); R(g, 4, 4, 3, 3, 'e'); R(g, 9, 4, 3, 3, 'e');
+    P(g, 5, 5, 'c'); P(g, 10, 5, 'c'); R(g, 7, 7, 2, 1, 'e'); R(g, 4, 8, 8, 3, 'W');
+    for (let x = 4; x < 12; x += 2) P(g, x, 9, 'e');
+    R(g, 3, 12, 2, 2, 'a'); R(g, 7, 13, 2, 1, 'a'); R(g, 11, 12, 2, 2, 'a');
+  } else if (shape === 'beast') {
+    g = mk(20, 13);
+    R(g, 4, 3, 12, 6, 'a'); R(g, 14, 2, 5, 5, 'a'); P(g, 17, 3, 'c'); R(g, 17, 7, 2, 1, 'W');
+    P(g, 14, 1, 'W'); P(g, 18, 1, 'W'); R(g, 5, 9, 2, 4, 'd'); R(g, 9, 9, 2, 4, 'd'); R(g, 13, 9, 2, 4, 'd');
+    R(g, 1, 4, 3, 1, 'd'); for (let x = 5; x < 15; x += 3) R(g, x, 1, 1, 2, 'd');
+  } else if (shape === 'slime') {
+    g = mk(16, 12);
+    R(g, 2, 6, 12, 6, 'a'); R(g, 4, 3, 8, 3, 'a'); R(g, 3, 5, 10, 1, 'a'); R(g, 5, 4, 2, 1, 'W');
+    R(g, 5, 7, 2, 2, 'W'); P(g, 6, 8, 'e'); R(g, 10, 7, 2, 2, 'W'); P(g, 11, 8, 'e'); R(g, 6, 10, 4, 1, 'e'); R(g, 2, 11, 12, 1, 'd');
+  } else {
+    g = mk(16, 16);
+    R(g, 3, 5, 10, 7, 'S'); R(g, 0, 6, 3, 7, 'S'); R(g, 13, 6, 3, 7, 'S'); R(g, 5, 1, 6, 5, 'S');
+    P(g, 6, 3, 'c'); P(g, 9, 3, 'c'); R(g, 4, 12, 3, 4, 'T'); R(g, 9, 12, 3, 4, 'T'); R(g, 7, 7, 1, 3, 'T');
+  }
+  if (ranged) { const x = g[0].length - 4; R(g, x, 0, 3, 3, 'c'); P(g, x + 1, 1, 'W'); }
+  return g;
+}
+
 function boss(race: Race, raid: boolean): Grid {
-  const s = hero(race, 'fighter');
-  R(s, 3, 10, 2, 10, 'd'); R(s, 6, 1, 1, 3, 'W'); R(s, 14, 1, 1, 3, 'W');
-  if (raid) R(s, 7, 2, 7, 1, 'g');
-  const g = mk(40, 48);
-  s.forEach((row, y) => row.forEach((k, x) => { if (k) R(g, x * 2, y * 2, 2, 2, k); }));
+  const s = monster(race, false);
+  if (raid) R(s, 0, 0, 1, 1, 'g');
+  const g = mk(s[0].length * 3, s.length * 3);
+  s.forEach((row, y) => row.forEach((k, x) => { if (k) R(g, x * 3, y * 3, 3, 3, k); }));
   return g;
 }
 
@@ -126,7 +152,8 @@ export function buildGrid(s: SpriteSpec): Grid {
   if (s.kind === 'hero') g = hero(s.race, s.role ?? 'fighter');
   else if (s.kind === 'boss') g = boss(s.race, !!s.raid);
   else if (s.kind === 'base') g = fortress();
-  else g = creep(s.race, s.ctype ?? 'infantry', s.kind === 'mob');
+  else if (s.kind === 'mob') g = monster(s.race, s.ctype === 'ranged');
+  else g = creep(s.race, s.ctype ?? 'infantry');
   return finish(g, (s.kind === 'hero' && (s.form ?? 0) >= 2) || !!s.raid);
 }
 
