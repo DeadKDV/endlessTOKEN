@@ -33,10 +33,16 @@ export function movePartyMember(s: GameState, id: string, dir: -1 | 1): GameStat
   return { ...s, party };
 }
 
+/** Цена призыва в кристаллах: первые герои дёшевы, каждый следующий дороже (как в Endless Frontier). */
+export function summonCost(s: GameState): number {
+  const owned = Math.max(1, Object.keys(s.heroes).length);
+  return Math.round(economy.prestige.heroSummonCost * Math.pow(economy.prestige.heroSummonGrowth, owned - 1));
+}
+
 /** Призыв нового героя: за кристаллы предков или за самоцветы (вне очереди). */
 export function summonHero(s: GameState, id: string, pay: 'crystals' | 'gems' = 'crystals'): GameState {
   if (s.heroes[id] || !heroById(id)) return s;
-  const cost = pay === 'crystals' ? economy.prestige.heroSummonCost : economy.gems.heroSummon;
+  const cost = pay === 'crystals' ? summonCost(s) : economy.gems.heroSummon;
   if (s[pay] < cost) return s;
   return { ...s, [pay]: s[pay] - cost, heroes: { ...s.heroes, [id]: { lvl: 1, form: 0, pet: 0, artifacts: [], floorsInParty: 0 } } };
 }

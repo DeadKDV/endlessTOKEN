@@ -26,7 +26,10 @@ export function eggRecipient(s: GameState): string | null {
 export function onBossCleared(s: GameState, floor: number): { state: GameState; egg: string | null } {
   if (floor % P.eggEveryFloors !== 0) return { state: s, egg: null };
   let state: GameState = { ...s, petFood: s.petFood + P.foodPerBoss };
-  const egg = floor >= s.maxFloor ? eggRecipient(s) : null;
+  const first = floor >= s.maxFloor;
+  const egg = first ? eggRecipient(s) : null;
+  // первое прохождение боссового этажа даёт кристаллы - чтобы было кем заполнять слоты отряда до воскрешения
+  if (first) state = { ...state, crystals: state.crystals + Math.floor(floor / economy.prestige.bossFirstClearCrystalsPer) };
   if (egg) state = { ...state, heroes: { ...state.heroes, [egg]: { ...state.heroes[egg], pet: 1 } } };
   return { state, egg };
 }

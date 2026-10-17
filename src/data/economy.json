@@ -3,11 +3,11 @@
   "mob": { "hpBase": 80, "hpGrowth": 1.11, "hpStepEvery": 10, "hpStepMult": 1.5, "atkBase": 10, "atkGrowth": 1.09, "baseHpMult": 12 },
   "floor": { "wavesPerFloor": 3, "mobsPerWave": 5, "bossEvery": 10, "raidBossEvery": 50, "bossHpMult": 5, "raidBossHpMult": 20, "raidBossTimerSec": 90 },
   "rewards": { "goldBase": 10, "goldGrowth": 1.10, "floorPointsPerN": 5 },
-  "hero": { "costBase": 15, "costGrowth": 1.08, "atkGrowth": 1.07, "hpGrowth": 1.06, "milestoneEvery": 10, "milestoneMult": 1.5, "formMult": [1.0, 1.8, 3.2], "creepsPerForm": [4, 6, 10], "formUnlock": { "awakening": { "floors": 50, "floorPoints": 500 }, "union": { "petLevel": 10 } } },
+  "hero": { "costBase": 15, "costGrowth": 1.09, "atkGrowth": 1.07, "hpGrowth": 1.06, "milestoneEvery": 10, "milestoneMult": 1.5, "formMult": [1.0, 1.8, 3.2], "creepsPerForm": [4, 6, 10], "formUnlock": { "awakening": { "floors": 50, "floorPoints": 500 }, "union": { "petLevel": 10 } } },
   "battle": { "spawnGapSec": 0.5, "waveEverySec": 24, "floorTimeSec": 300, "heroRespawnSec": 8, "creepRespawnSec": 4, "partyBaseHpMult": 4, "partyBaseX": -2 },
   "party": { "slotsAtFloor": [1, 10, 25, 50, 100], "monoRaceAtkMult": 1.15, "rainbowCreepMult": 1.10 },
   "pets": { "maxLevel": 30, "foodCostPerLevel": 5, "foodCostPower": 2, "statPerLevel": 0.05, "creepEveryLevels": 5, "passiveAt": 5, "unionAt": 10, "auraAt": 20, "noCooldownAt": 30, "eggEveryFloors": 10, "foodPerBoss": 5, "dailyFood": 5 },
-  "prestige": { "divisor": 10, "power": 1.5, "tavernPerLevel": 0.02, "crystalAtkMultPer": 0.01, "crystalGoldMultPer": 0.01, "heroSummonCost": 50 },
+  "prestige": { "divisor": 10, "power": 1.5, "tavernPerLevel": 0.02, "crystalAtkMultPer": 0.01, "crystalGoldMultPer": 0.01, "heroSummonCost": 5, "heroSummonGrowth": 1.5, "bossFirstClearCrystalsPer": 5 },
   "offline": { "baseHours": 8, "maxHours": 24 },
   "dungeons": { "durationSec": 60, "runsPerDay": 3, "resourcePerWave": 10, "floorScale": 0.8, "waveGrowth": 1.08 },
   "ads": {

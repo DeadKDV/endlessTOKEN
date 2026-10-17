@@ -17,7 +17,7 @@ describe('формулы из DESIGN.md', () => {
   });
   it('стоимость уровня геометрическая', () => {
     expect(heroLevelCost(0)).toBe(15);
-    expect(heroLevelCost(10) / heroLevelCost(9)).toBeCloseTo(1.08);
+    expect(heroLevelCost(10) / heroLevelCost(9)).toBeCloseTo(1.09);
   });
   it('атака героя: веха ×1.5 каждые 10 уровней, формы 1/1.8/3.2', () => {
     expect(heroAtk(20, 10, 0) / heroAtk(20, 9, 0)).toBeCloseTo(1.07 * 1.5);
