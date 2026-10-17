@@ -10,6 +10,7 @@
   import { artifactById, artifactSlots } from '../sim/artifacts';
   import economy from '../data/economy.json';
   import artifactData from '../data/artifacts.json';
+  import HeroPortrait from './HeroPortrait.svelte';
   import BuyButtons from './BuyButtons.svelte';
   import { fmt } from './format';
   import { t, tpl, artifactEffectText } from './text';
@@ -32,7 +33,10 @@
     <b>{def.name.ru}</b>
     <button onclick={onclose}>{t.hero.close}</button>
   </div>
-  <div>{t.race[def.race as 'human']} · {t.role[def.role as 'tank']} · {tpl(t.level, { n: sv.lvl })} · {def.forms[sv.form].name.ru}</div>
+  <div class="tile">
+    <HeroPortrait heroId={id} form={sv.form} size={96} />
+    <div>{t.race[def.race as 'human']} · {t.role[def.role as 'tank']}<br />{tpl(t.level, { n: sv.lvl })} · {def.forms[sv.form].name.ru}</div>
+  </div>
   <div class="row">
     <span class="muted">{fmt(heroLevelCost(sv.lvl))} 💰</span>
     <BuyButtons can={Number($save.gold) >= heroLevelCost(sv.lvl)} onbuy={n => levelUpHero(id, n)} />
@@ -67,6 +71,21 @@
     </div>
     <div class="muted">{tpl(t.hero.petBonus, { p: Math.round((Math.pow(1 + economy.pets.statPerLevel, sv.pet) - 1) * 100), c: Math.floor(sv.pet / economy.pets.creepEveryLevels) })} · 🍖 {$save.petFood}</div>
   {/if}
+
+  <h4>{t.hero.formsTitle}</h4>
+  <div class="forms">
+    {#each [0, 1, 2] as f}
+      <div class="fcell">
+        <HeroPortrait heroId={id} form={f} size={72} dim={f > sv.form} />
+        <span class:muted={f > sv.form}>{def.forms[f].name.ru}</span>
+        {#if f > sv.form}
+          <span class="muted">{f === 1
+            ? tpl(t.hero.awakenNeed, { a: Math.min(sv.floorsInParty, U.awakening.floors), b: U.awakening.floors, c: Math.min($save.floorPoints, U.awakening.floorPoints), d: U.awakening.floorPoints })
+            : tpl(t.hero.uniteNeed, { n: U.union.petLevel })}</span>
+        {/if}
+      </div>
+    {/each}
+  </div>
 
   <h4>{t.hero.formDone.replace('{name}', def.forms[sv.form].name.ru)}</h4>
   {#if sv.form === 0}
@@ -115,5 +134,7 @@
   .card { position: absolute; inset: 0; z-index: 20; overflow-y: auto; padding: 12px; background: #101020; color: #ddd; font: 13px monospace; }
   .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+  .forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .fcell { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; font-size: 11px; }
   h4 { margin: 10px 0 4px; color: #ffd54f; }
 </style>

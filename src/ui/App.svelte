@@ -51,6 +51,7 @@
   :global(button) { background: #2a2a44; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 6px 10px; font: 12px monospace; }
   :global(button:disabled) { opacity: 0.4; }
   :global(.row) { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid #222; }
+  :global(.tile) { display: flex; gap: 8px; align-items: center; background: #16162b; border: 1px solid #2a2a44; border-radius: 6px; padding: 6px; margin-bottom: 6px; }
   :global(.warn) { color: #ff9f43; }
   :global(.muted) { color: #888; font-size: 11px; }
   :global(.stub) { color: #666; text-align: center; margin-top: 40px; }
