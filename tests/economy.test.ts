@@ -33,8 +33,8 @@ describe('формулы из DESIGN.md', () => {
     expect(offlineHours(1000)).toBe(24);
   });
   it('кристаллы престижа', () => {
-    expect(crystalsFor(100, 0)).toBe(31);
-    expect(crystalsFor(212, 20)).toBe(Math.floor(97 * 1.4));
+    expect(crystalsFor(100, 0)).toBe(94); // 3 · 10^1.5
+    expect(crystalsFor(212, 20)).toBe(Math.floor(Math.floor(3 * Math.pow(21.2, 1.5)) * 1.4));
   });
 });
 

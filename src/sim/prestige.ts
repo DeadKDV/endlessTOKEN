@@ -3,7 +3,7 @@ import { partyArtifactSum } from './artifacts';
 import type { GameState } from './types';
 
 export function crystalsFor(maxFloor: number, tavernLevel: number): number {
-  const base = Math.floor(Math.pow(maxFloor / economy.prestige.divisor, economy.prestige.power));
+  const base = Math.floor(economy.prestige.crystalScale * Math.pow(maxFloor / economy.prestige.divisor, economy.prestige.power));
   return Math.floor(base * (1 + economy.prestige.tavernPerLevel * tavernLevel));
 }
 

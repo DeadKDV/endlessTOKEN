@@ -59,7 +59,9 @@ while (sec < HOURS * 3600) {
   } else s = { ...s, floor: Math.max(1, s.floor - 1) };
   spend();
   // воскрешение, когда забег упёрся: полчаса без нового этажа в этом забеге
-  if (sinceBest > 1800 && prestigeGain(s) > 0) {
+  // 'smart' (3-й аргумент): воскрешаться, когда новые кристаллы заметно больше накопленных
+  const smart = process.argv[3] === 'smart' && prestigeGain(s) >= Math.max(20, s.crystals * 1.5);
+  if ((sinceBest > 1800 || smart) && prestigeGain(s) > 0) {
     prestiges++;
     log(`воскрешение №${prestiges} с этажа ${s.runMaxFloor}: +${prestigeGain(s)} кристаллов`);
     s = applyPrestige(s); sinceBest = 0;

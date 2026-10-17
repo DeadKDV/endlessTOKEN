@@ -100,7 +100,7 @@ describe('петомцы', () => {
     expect(r.egg).toBe('groul');
     expect(r.state.heroes.groul.pet).toBe(1);
     expect(r.state.petFood).toBe(5);
-    expect(r.state.crystals).toBe(s.crystals + 2); // первое прохождение 10-го: 10 / 5
+    expect(r.state.crystals).toBe(s.crystals + 1); // первое прохождение 10-го: 10 / 10
     // повторное прохождение — только корм
     const again = onBossCleared({ ...s, maxFloor: 20 }, 10);
     expect(again.egg).toBeNull();
@@ -294,7 +294,7 @@ describe('престиж', () => {
     });
     s.heroes.alderic = { lvl: 120, form: 2, pet: 12, artifacts: ['skull_lich'], floorsInParty: 77 };
     const gain = prestigeGain(s);
-    expect(gain).toBe(Math.floor(Math.floor(Math.pow(8, 1.5)) * 1.2));
+    expect(gain).toBe(Math.floor(Math.floor(3 * Math.pow(8, 1.5)) * 1.2));
     const r = applyPrestige(s);
     expect(r.floor).toBe(1); expect(r.runMaxFloor).toBe(1); expect(r.gold).toBe('0');
     expect(r.crystals).toBe(gain);
@@ -310,7 +310,7 @@ describe('престиж', () => {
   });
   it('кристаллы считаются по этажу забега, а не по рекорду', () => {
     const s = { ...mk(), maxFloor: 100, runMaxFloor: 10 };
-    expect(prestigeGain(s)).toBe(1);
+    expect(prestigeGain(s)).toBe(3); // floor(3 · 1^1.5), по забегу, а не по рекорду
   });
 });
 
@@ -359,8 +359,8 @@ describe('золото и магазин', () => {
     const s = mk();
     expect(goldMult(s)).toBe(1);
     s.crystals = 10; s.artifacts = { royal_seal: 1 }; s.heroes.alderic.lvl = 50; s.heroes.alderic.artifacts = ['royal_seal'];
-    expect(goldMult(s)).toBeCloseTo(1.1 * 1.1);
-    expect(goldMult({ ...s, perks: { permGold: true, starterPack: false } })).toBeCloseTo(1.1 * 1.1 * 1.1);
+    expect(goldMult(s)).toBeCloseTo(1.2 * 1.1);
+    expect(goldMult({ ...s, perks: { permGold: true, starterPack: false } })).toBeCloseTo(1.2 * 1.1 * 1.1);
   });
   it('вечный ×1.1 за 1000 самоцветов — один раз', () => {
     const s = { ...mk(), gems: 1500 };
