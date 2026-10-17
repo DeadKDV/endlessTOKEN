@@ -19,7 +19,11 @@ export function setArtSet(v: ArtSet) {
 }
 
 /** Папка выбранного набора и список его юнитов; null - набора нет на сервере или выбрана графика кодом. */
-export async function artIndex(): Promise<{ dir: string; ids: string[] } | null> {
+let indexP: Promise<{ dir: string; ids: string[] } | null> | undefined;
+/** index.json запрашивается один раз. */
+export function artIndex() { return indexP ??= fetchIndex(); }
+
+async function fetchIndex(): Promise<{ dir: string; ids: string[] } | null> {
   const set = artSet();
   if (set === 'code') return null;
   const dir = `${import.meta.env.BASE_URL}${set}/`;

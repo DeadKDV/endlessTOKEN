@@ -13,11 +13,14 @@ import { save } from '../game';
 import { procSprite, type ProcTex } from './procSprites';
 import { Backdrop } from './backdrop';
 import { artIndex } from './artSet';
+import { loadProto, peekProto, type Proto } from './atlasStore';
+import { sfx } from '../audio/sfx';
+import { mobRaceForFloor } from '../sim/races';
 import { BattleFx } from './fx';
 import races from '../data/races.json';
 import creeps from '../data/creeps.json';
 
-type HeroDef = { id: string; role: Role; forms: { sprite?: string }[] };
+type HeroDef = { id: string; role: Role; race?: string; forms: { sprite?: string }[] };
 
 export const LOGICAL_W = 360;
 export const LOGICAL_H = 640;
@@ -48,7 +51,6 @@ const CREEP_TYPE = new Map<string, CreepType>(
 const FADE_MS = 300, FLASH_MS = 110, LUNGE_MS = 160;
 const TEXT_SMALL = { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff };
 
-interface Proto { sheet: Spritesheet; anchors: Record<string, [number, number]>; charH: Record<string, number>; projectile?: ProjType; tint?: number }
 interface UnitView {
   root: Container; hp: Graphics; w: number; h: number; kind: Unit['kind']; dx: number; dy: number;
   sprite: Sprite; tex?: ProcTex; baseTint: number;
@@ -74,7 +76,6 @@ export class BattleView {
   private lastHeal = new Map<number, number>();
   private fx!: BattleFx;
   private sheets = new Map<string, Spritesheet>();
-  private protos = new Map<string, Proto>();
   private projs: Proj[] = [];
   private popups: Popup[] = [];
   private bossRow = makeRow();
@@ -101,7 +102,7 @@ export class BattleView {
     this.world.addChild(this.fx.layer);
     this.app.stage.addChild(this.backdrop, this.world, this.bossRow.c, this.baseRow.c, this.ownBaseRow.c, this.floorLabel);
     await this.loadAtlases();
-    await this.loadProtos();
+    void this.preload();
   }
 
   render(s: BattleState) {
@@ -110,7 +111,11 @@ export class BattleView {
     const byId = new Map(s.units.map(u => [u.id, u]));
     for (const u of s.units) {
       if (!u.alive || u.pending) continue;
-      const v = this.views.get(u.id) ?? this.makeView(u);
+      let v = this.views.get(u.id) ?? this.makeView(u);
+      if (!v.proto && this.protoOf(u)) { // атлас догрузился - заменяем процедурный спрайт анимированным
+        v.root.destroy({ children: true });
+        v = this.makeView(u);
+      }
       if (u.attackCooldown > v.lastCd + 1e-6) this.onAttack(v, u, s, now);
       v.lastCd = u.attackCooldown;
     }
@@ -142,9 +147,10 @@ export class BattleView {
     for (const [id, v] of this.views) if (!seen.has(id)) {
       const du = byId.get(id);
       if (du && !du.alive && du.side === 'enemy' && !du.temp) {
-        if (du.kind === 'base') this.fx.shake(8, 600, now);
-        else this.fx.coins(v.root.x, v.root.y - v.h * 0.4, du.kind === 'boss' ? 8 : 2);
+        if (du.kind === 'base') { this.fx.shake(8, 600, now); sfx('base'); }
+        else { this.fx.coins(v.root.x, v.root.y - v.h * 0.4, du.kind === 'boss' ? 8 : 2); sfx('coin'); }
       }
+      if (du && du.kind !== 'base' && !du.temp) sfx('death');
       if (v.anim) this.setAnim(v, 'death', false, DEATH_MS);
       this.dying.push({ v, born: now, deb: v.kind === 'base' ? this.debris(v) : undefined }); this.views.delete(id);
     }
@@ -186,27 +192,33 @@ export class BattleView {
     }));
   }
 
-  private async loadProtos() {
+  /** Герои отряда, их крипы и мобы расы текущего этажа - до первого появления на поле. */
+  private async preload() {
     const set = await artIndex();
-    if (!set) return; // набора нет или выбрана графика кодом — молча пропускаем
-    const { dir, ids } = set;
-    await Promise.all(ids.map(async id => {
-      try {
-        const texture = await Assets.load<Texture>(`${dir}${id}.png`);
-        texture.source.scaleMode = 'nearest';
-        const data = await (await fetch(`${dir}${id}.json`)).json();
-        const sheet = new Spritesheet(texture, data);
-        await sheet.parse();
-        this.protos.set(id, { sheet, anchors: data.meta.anchors, charH: data.meta.charH, projectile: data.meta.projectile, tint: data.meta.tint });
-      } catch (e) {
-        console.warn(`прото-атлас ${id} не загружен`, e);
-      }
-    }));
+    if (!set) return;
+    const sv = get(save), races = new Set<string>();
+    for (const id of sv.party) {
+      loadProto(id);
+      const r = HEROES.get(id)?.race;
+      if (r) races.add(r);
+    }
+    for (const r of races) for (const t of ['infantry', 'ranged', 'healer']) loadProto(`${r}_${t}`);
+    const mob = mobRaceForFloor(sv.floor);
+    for (const t of ['mob_melee', 'mob_ranged', 'boss']) loadProto(`${mob}_${t}`);
   }
 
-  private protoOf(u: Unit): Proto | undefined {
+  private protoId(u: Unit): string | undefined {
     if (u.kind === 'base') return undefined; // базы - здания, не юниты EF
-    return this.protos.get(u.kind === 'hero' || u.kind === 'creep' ? u.refId : `${u.race}_${u.refId}`);
+    return u.kind === 'hero' || u.kind === 'creep' ? u.refId : `${u.race}_${u.refId}`;
+  }
+
+  /** Атлас юнита, если уже загружен; иначе запускает загрузку (до неё рисуется процедурный спрайт). */
+  private protoOf(u: Unit): Proto | undefined {
+    const id = this.protoId(u);
+    if (!id) return undefined;
+    const p = peekProto(id);
+    if (!p) void loadProto(id);
+    return p;
   }
 
   private setAnim(v: UnitView, name: string, loop: boolean, durMs?: number) {
@@ -232,7 +244,7 @@ export class BattleView {
   private onAttack(v: UnitView, u: Unit, s: BattleState, now: number) {
     v.lunge = now;
     this.act(v, 'attack', ATTACK_MS, now);
-    if (u.stats.range <= 1.5 || u.kind === 'base') return;
+    if (u.stats.range <= 1.5 || u.kind === 'base') { if (u.kind !== 'base') sfx('sword'); return; }
     const heals = (u.healPower ?? 0) > 0 || CREEP_TYPE.get(u.refId) === 'healer';
     const cands = s.units.filter(o => o.alive && o.id !== u.id && (heals ? o.side === u.side : o.side !== u.side));
     if (!cands.length) return;
@@ -240,6 +252,7 @@ export class BattleView {
       ? cands.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a))
       : cands.reduce((a, b) => (Math.abs(b.x - u.x) < Math.abs(a.x - u.x) ? b : a));
     const type = this.protoOf(u)?.projectile ?? (heals ? 'heal' : (u.kind === 'creep' ? CREEP_TYPE.get(u.refId) === 'ranged' : HEROES.get(u.refId)?.role === 'ranger') ? 'arrow' : 'orb');
+    sfx(heals ? 'heal' : type === 'arrow' ? 'arrow' : type === 'orb' ? 'orb' : 'bullet');
     const tv = this.views.get(t.id);
     const dir = t.x >= u.x ? 1 : -1;
     const x0 = u.x * CELL + v.dx + dir * 6, y0 = GROUND_Y + v.dy - v.h * 0.6;
@@ -388,6 +401,7 @@ export class BattleView {
     const crit = avg !== undefined && dmg > avg * 1.6;
     this.ema.set(u.id, avg === undefined ? dmg : avg * 0.8 + Math.min(dmg, avg * 1.3) * 0.2);
     const pk: PopKind = u.kind === 'base' ? 'base' : crit ? 'crit' : 'dmg';
+    if (crit) sfx('crit');
     const p = this.projs.find(q => q.target.id === u.id && !q.pu && !q.fx);
     if (p) { p.dmg = dmg; p.pu = u; p.pk = pk; return; }
     this.popupNow(u, dmg, now, pk);

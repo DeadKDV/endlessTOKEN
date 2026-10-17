@@ -2,6 +2,7 @@
 import { HEROES } from '../sim/party';
 import { procCanvas } from './procSprites';
 import { artIndex } from './artSet';
+import { getImage, getJson } from './atlasStore';
 import type { Race, Role } from '../sim/types';
 
 interface SheetData {
@@ -11,22 +12,7 @@ interface SheetData {
 }
 
 const cache = new Map<string, Promise<string>>();
-const json = new Map<string, Promise<any>>();
-const images = new Map<string, Promise<HTMLImageElement>>();
 const base = () => import.meta.env.BASE_URL;
-
-const getJson = (url: string) => {
-  let p = json.get(url);
-  if (!p) json.set(url, p = fetch(url).then(r => { if (!r.ok) throw new Error(url); return r.json(); }));
-  return p;
-};
-const getImage = (url: string) => {
-  let p = images.get(url);
-  if (!p) images.set(url, p = new Promise((res, rej) => {
-    const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error(url)); i.src = url;
-  }));
-  return p;
-};
 
 /** Вырезает кадр и обрезает прозрачные поля, чтобы герой занимал всю рамку. */
 function cropToDataUrl(img: CanvasImageSource, x: number, y: number, w: number, h: number, tint?: number): string {

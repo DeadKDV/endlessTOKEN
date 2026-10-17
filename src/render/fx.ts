@@ -4,6 +4,7 @@
  */
 import { Container, Graphics, Sprite, Text, Texture, type Renderer } from 'pixi.js';
 import type { BattleState, Unit } from '../sim/types';
+import { sfx } from '../audio/sfx';
 import { isBossFloor, isRaidBossFloor } from '../sim/floor';
 
 const MAX = 200;
@@ -126,8 +127,8 @@ export class BattleFx {
     const p = this.prev;
     this.cds.clear();
     if (!p || p.waveGen || s.waveGen) return;
-    if (p.finished === 'win') this.show('Этаж пройден!', GOLD, 1200, now);
-    else if (p.finished === 'lose') this.show('База пала', 0xff4444, 1400, now);
+    if (p.finished === 'win') { this.show('Этаж пройден!', GOLD, 1200, now); sfx('win'); }
+    else if (p.finished === 'lose') { this.show('База пала', 0xff4444, 1400, now); sfx('lose'); }
     if (s.floor === p.floor && !p.finished) return; // перезапуск того же этажа (прокачка) - без предупреждений
     if (s.floor !== this.bossShownFloor && (isBossFloor(s.floor) || isRaidBossFloor(s.floor))) {
       this.bossShownFloor = s.floor;
@@ -141,6 +142,7 @@ export class BattleFx {
     const me = this.pos(u.id);
     if (!me) return;
     const cy = me.y - me.h * 0.5;
+    sfx(ult ? 'ult' : 'cast');
     this.label(a.name?.ru ?? a.id, me.x, me.y - me.h - 16, now, ult ? 0xffffff : GOLD);
     this.shape('flash', me.x, cy, me.h * 0.9, c, 350, now);
     this.burst(me.x, cy, c, 6, 40);
