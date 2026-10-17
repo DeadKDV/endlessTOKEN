@@ -67,6 +67,9 @@ export interface Unit {
   recalled?: boolean;
   temp?: boolean;          // призванный/скелет/дух: не воскрешается и не считается крипом отряда
   expireTick?: number;
+  spawnAt?: number;        // тик выхода из базы; пока не вышел - pending
+  pending?: boolean;
+  diedAt?: number;         // тик смерти: павших врагов и призванных через секунду убираем из боя       // ещё не выходил на поле: не рисовать, не считать
 }
 
 /** Свой генератор волн (подземелья): волна w (1-based) со стартом в x. Без него — обычный этаж. */
@@ -84,6 +87,7 @@ export interface BattleState {
   zones?: Zone[];
   goldMult?: number;
   waveGen?: WaveGen;
+  nextWaveAt?: number;     // тик следующей волны из вражеской базы
   baseOpen?: boolean;      // база бьётся только после последней волны
 }
 

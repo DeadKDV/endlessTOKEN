@@ -16,6 +16,8 @@ const member = (abilities: Ability[], creeps = 0): PartyMember => ({
 /** Бой с одним врагом вплотную, остальные далеко. */
 function arena(party: PartyMember[]): BattleState {
   const s = createBattle(1, party, 1);
+  // все сразу на поле, без очереди из базы
+  for (const u of s.units) if (u.pending) { u.alive = true; u.pending = false; u.spawnAt = undefined; }
   const mobs = s.units.filter(u => u.side === 'enemy' && u.kind === 'mob');
   mobs.forEach((m, i) => { m.x = i === 0 ? 1 : 30 + i; m.hp = m.maxHp = 1000; });
   return s;

@@ -295,7 +295,7 @@ function passive(s: BattleState, u: Unit, a: Ability) {
 /** Применить активную способность. false — условия не выполнены, кулдаун не тратится. */
 function cast(s: BattleState, u: Unit, a: Ability, rnd: () => number): boolean {
   const t = s.tick;
-  const mine = s.units.filter(x => x.alive && x.side === u.side);
+  const mine = s.units.filter(x => x.alive && x.side === u.side && x.kind !== 'base');
   const foes = s.units.filter(x => x.alive && x.side !== u.side && (x.kind !== 'base' || s.baseOpen))
     .sort((p, q) => dist(u, p) - dist(u, q) || p.id - q.id);
   const near = foes[0] as Unit; // для NO_ENEMY_NEEDED может быть undefined, но там не используется

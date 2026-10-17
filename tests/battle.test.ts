@@ -38,7 +38,7 @@ describe('вражеская база', () => {
     const s0 = newGameState(0);
     s0.heroes.alderic.lvl = 120;
     const b = createBattle(1, buildParty(s0), 7);
-    const base = b.units.find(u => u.kind === 'base')!;
+    const base = b.units.find(u => u.side === 'enemy' && u.kind === 'base')!;
     expect(base.x).toBe(BASE_X);
     while (!b.finished && b.tick < 20_000) {
       step(b);

@@ -7,6 +7,8 @@ import { applyAbilities, initAbilities, pickTarget, basicAttack, atkSpeedOf, ran
 import type { BattleState, Unit, Race, Stats, CreepType, Ability, WaveGen } from './types';
 
 const DT = economy.tickMs / 1000;
+const B = economy.battle;
+const ticks = (sec: number) => Math.round(sec * 1000 / economy.tickMs);
 const WAVES = economy.floor.wavesPerFloor;
 const PARTY_START_X = 0;
 const ENEMY_START_X = 10;
@@ -38,9 +40,42 @@ export function createBattle(floor: number, party: PartyMember[], seed: number, 
   });
   const s: BattleState = { floor, wave: 1, tick: 0, units, seed, rngState: seed, goldEarned: 0, finished: null, waveGen };
   if (waveGen) s.units.push(...waveGen(1, ENEMY_START_X));
-  else s.units.push(spawnBase(floor, BASE_X), ...spawnWave(floor, 1, WAVE_X));
+  else {
+    // Как в Endless Frontier: у каждой стороны база, юниты выходят из неё по очереди.
+    const heroHp = units.filter(u => u.kind === 'hero').reduce((a, u) => a + u.maxHp, 0);
+    const own = mkUnit('party', party[0]?.race ?? 'human', 'base', 'party_base', B.partyBaseX,
+      { hp: Math.max(1, heroHp) * B.partyBaseHpMult, atk: 0, atkSpeed: 0, crit: 0, critDmg: 1, range: 0, moveSpeed: 0 });
+    // герои первыми, затем крипы
+    const order = [...units.filter(u => u.kind === 'hero'), ...units.filter(u => u.kind !== 'hero')];
+    order.forEach((u, i) => queue(u, i * ticks(B.spawnGapSec)));
+    s.units.unshift(own);
+    s.units.push(spawnBase(floor, BASE_X), ...stagger(spawnWave(floor, 1, WAVE_X), 0));
+    s.nextWaveAt = ticks(B.waveEverySec);
+  }
   initAbilities(s);
   return s;
+}
+
+function queue(u: Unit, at: number) { u.alive = false; u.pending = true; u.spawnAt = at; }
+function stagger(us: Unit[], from: number): Unit[] { us.forEach((u, i) => queue(u, from + i * ticks(B.spawnGapSec))); return us; }
+
+/** Выход из базы: ожидающие появляются, павшие из отряда встают в очередь на возвращение. */
+function spawns(s: BattleState) {
+  for (const u of s.units) {
+    if (u.kind === 'base' || u.temp) continue;
+    if (u.alive) { u.spawnAt = undefined; continue; }
+    if (u.spawnAt === undefined) {
+      if (u.side === 'party') u.spawnAt = s.tick + ticks(u.kind === 'hero' ? B.heroRespawnSec : B.creepRespawnSec);
+      continue;
+    }
+    if (s.tick < u.spawnAt) continue;
+    const homeX = u.side === 'party' ? B.partyBaseX + 0.5 : WAVE_X;
+    u.alive = true; u.pending = false; u.spawnAt = undefined; u.x = homeX; u.hp = u.maxHp;
+    u.attackCooldown = 0; u.shield = 0; u.stacks = 0; u.revived = false; u.recalled = false;
+    if (u.cds) u.cds = u.cds.map(() => 0);
+    // постоянные эффекты (расовые пассивки) остаются, временные - нет
+    if (u.effects) u.effects = u.effects.filter(e => e.until >= 1e9);
+  }
 }
 
 function mkUnit(side: Unit['side'], race: Race, kind: Unit['kind'], refId: string, x: number, stats: Stats): Unit {
@@ -51,29 +86,44 @@ function mkUnit(side: Unit['side'], race: Race, kind: Unit['kind'], refId: strin
 export function step(s: BattleState): BattleState {
   if (s.finished) return s;
   const rnd = mulberry32(s.rngState + s.tick);
+  const ownBase = s.waveGen ? undefined : s.units.find(u => u.side === 'party' && u.kind === 'base');
+  if (ownBase) {
+    // база пала или этаж затянулся - поражение, игра откатит на этаж назад
+    if (!ownBase.alive || s.tick >= ticks(B.floorTimeSec)) { s.finished = 'lose'; return s; }
+    spawns(s);
+  }
   const party = s.units.filter(u => u.alive && u.side === 'party');
   const enemy = s.units.filter(u => u.alive && u.side === 'enemy');
-  if (party.length === 0) { s.finished = 'lose'; return s; }
-  const waveLeft = enemy.some(u => u.kind !== 'base');
-  if (enemy.length === 0 && !s.waveGen && s.wave >= WAVES) {
-    s.goldEarned += floorGold(s.floor) * 0.4 * (s.goldMult ?? 1);
-    s.finished = 'win';
-    return s;
-  }
-  if (!waveLeft) {
-    if (s.waveGen || s.wave < WAVES) {
+  if (!ownBase && party.length === 0) { s.finished = 'lose'; return s; }
+  const waveLeft = s.units.some(u => u.side === 'enemy' && u.kind !== 'base' && (u.alive || u.pending));
+  if (s.waveGen) {
+    // подземелье: волна за волной, пока не выйдет время
+    if (!waveLeft) {
       s.wave++;
-      if (s.waveGen) s.units.push(...s.waveGen(s.wave, Math.max(...party.map(u => u.x)) + ENEMY_START_X));
-      else s.units.push(...spawnWave(s.floor, s.wave, WAVE_X));
+      s.units.push(...s.waveGen(s.wave, Math.max(...party.map(u => u.x)) + ENEMY_START_X));
       s.tick++;
       return s;
     }
-    // волны выбиты - база открыта
-    s.baseOpen = true;
+  } else {
+    const enemyBase = s.units.find(u => u.side === 'enemy' && u.kind === 'base');
+    if (enemyBase && !enemyBase.alive) {
+      s.goldEarned += floorGold(s.floor) * 0.4 * (s.goldMult ?? 1);
+      s.finished = 'win';
+      return s;
+    }
+    // Вражеская база шлёт волны, пока её не сломают: следующая - когда выбита прежняя или по таймеру.
+    // после волн этажа - только по таймеру, иначе сильный отряд не успевает к базе
+    if ((!waveLeft && s.wave < WAVES) || s.tick >= (s.nextWaveAt ?? Infinity)) {
+      s.wave++;
+      s.units.push(...stagger(spawnWave(s.floor, s.wave, WAVE_X), s.tick));
+      s.nextWaveAt = s.tick + ticks(B.waveEverySec);
+    }
+    // с последней волны этажа (там же босс) базу можно бить
+    if (s.wave >= WAVES) s.baseOpen = true;
   }
   applyAbilities(s, rnd);
   for (const u of s.units) {
-    if (!u.alive) continue;
+    if (!u.alive || u.kind === 'base') continue;
     if (isStunned(u, s.tick)) { u.attackCooldown -= DT; continue; }
     const foes = u.side === 'party' ? (s.baseOpen ? enemy : enemy.filter(e => e.kind !== 'base')) : party;
     const target = pickTarget(s, u, foes);
@@ -81,7 +131,7 @@ export function step(s: BattleState): BattleState {
     const dist = Math.abs(target.x - u.x);
     // хилер: лечит союзника с наименьшим % HP вместо атаки
     if (u.healPower && u.attackCooldown <= 0) {
-      const allies = (u.side === 'party' ? party : enemy).filter(a => a.alive && a.hp < a.maxHp);
+      const allies = (u.side === 'party' ? party : enemy).filter(a => a.alive && a.kind !== 'base' && a.hp < a.maxHp);
       if (allies.length) {
         const low = allies.reduce((a, b) => (a.hp / a.maxHp < b.hp / b.maxHp ? a : b));
         low.hp = Math.min(low.maxHp, low.hp + u.healPower);
@@ -97,8 +147,20 @@ export function step(s: BattleState): BattleState {
     }
     u.attackCooldown -= DT;
   }
+  prune(s);
   s.tick++;
   return s;
+}
+
+/** Павшие враги и призванные копятся при непрерывных волнах - через секунду (анимация смерти) убираем их из боя. */
+function prune(s: BattleState) {
+  let dead = false;
+  for (const u of s.units) {
+    if (u.alive || u.pending || u.kind === 'base' || (u.side === 'party' && !u.temp)) { u.diedAt = undefined; continue; }
+    u.diedAt ??= s.tick;
+    if (s.tick - u.diedAt > 10) dead = true;
+  }
+  if (dead) s.units = s.units.filter(u => u.diedAt === undefined || s.tick - u.diedAt <= 10);
 }
 
 /** Прогнать бой до конца или до maxTicks. Возвращает итог — то, что клиент шлёт серверу. */
