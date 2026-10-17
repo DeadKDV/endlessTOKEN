@@ -13,6 +13,8 @@ const migrations: Record<number, (s: any) => any> = {
     artifacts: {}, perks: { permGold: false }, dailyFoodDay: '',
     heroes: Object.fromEntries(Object.entries(s.heroes ?? {}).map(([id, h]: [string, any]) => [id, { floorsInParty: 0, ...h }])),
   }),
+  // v2 → v3: отметка получения бесплатного стартового набора
+  2: s => ({ ...s, v: 3, perks: { permGold: false, ...s.perks, starterPack: false } }),
 };
 
 export function serialize(s: GameState): string {

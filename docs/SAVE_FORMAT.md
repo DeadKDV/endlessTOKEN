@@ -1,17 +1,17 @@
-# Формат сейва (v2)
+# Формат сейва (v3)
 
 `GameState` из `src/sim/types.ts`. Хранится в localStorage (`rv-tycoon.save.v1`, JSON → lz-string base64) и в `saves.state` (jsonb) в Supabase. Золото — строка (Decimal), остальное — числа.
 
 ```json
 {
-  "v": 2,
+  "v": 3,
   "savedAt": 1760712000000,
   "floor": 137, "maxFloor": 212, "runMaxFloor": 150,
   "gold": "4.21e19", "floorPoints": 3840, "crystals": 95, "petFood": 12, "gems": 40,
   "resources": { "bone": 1200, "leaf": 340, "ore": 0, "seal": 0, "totem": 0 },
   "heroes": { "morven": { "lvl": 184, "form": 2, "pet": 12, "artifacts": ["skull_lich"], "floorsInParty": 77 } },
   "artifacts": { "skull_lich": 7 },
-  "perks": { "permGold": false },
+  "perks": { "permGold": false, "starterPack": true },
   "dailyFoodDay": "2026-10-17",
   "party": ["morven", "groul", "silva", "valtor", "mortis"],
   "village": { "barracks_undead": 61, "range": 14 },
@@ -33,3 +33,7 @@
 - `dungeonRuns.date` — локальная дата YYYY-MM-DD; при её смене счётчики входов считаются нулевыми.
 - Миграция `migrations[1]`: `runMaxFloor = maxFloor`, `artifacts = {}`, `perks.permGold = false`, `dailyFoodDay = ''`, `floorsInParty = 0` у всех героев.
 
+
+## Изменения v2 → v3
+- `perks.starterPack` — бесплатный стартовый набор уже получен (выдаётся один раз: самоцветы, золото, корм из `economy.gems.starterPack`).
+- Миграция `migrations[2]`: `perks.starterPack = false`.

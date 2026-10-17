@@ -32,6 +32,16 @@ export function goldMult(s: GameState): number {
     * (s.perks.permGold ? economy.gems.permanentGold.mult : 1);
 }
 
+/** Бесплатный одноразовый стартовый набор: самоцветы, золото, корм петомцев. */
+export function claimStarterPack(s: GameState): GameState {
+  if (s.perks.starterPack) return s;
+  const p = economy.gems.starterPack;
+  return {
+    ...s, gems: s.gems + p.gems, gold: (Number(s.gold) + p.gold).toString(), petFood: s.petFood + p.petFood,
+    perks: { ...s.perks, starterPack: true },
+  };
+}
+
 /** Магазин: постоянный ×1.1 к золоту за 1000 самоцветов, один раз. */
 export function buyPermGold(s: GameState): GameState {
   const c = economy.gems.permanentGold.cost;

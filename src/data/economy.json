@@ -17,7 +17,7 @@
     "stubScreenText": "RVPower",
     "stubScreenSec": 3
   },
-  "gems": { "heroSummon": 300, "dungeonReset": 50, "extraRaidEntry": 100, "cosmeticMin": 200, "cosmeticMax": 800, "permanentGold": { "cost": 1000, "mult": 1.1 } },
+  "gems": { "starterPack": { "gems": 300, "gold": 1000, "petFood": 20 }, "heroSummon": 300, "dungeonReset": 50, "extraRaidEntry": 100, "cosmeticMin": 200, "cosmeticMax": 800, "permanentGold": { "cost": 1000, "mult": 1.1 } },
   "guild": { "maxMembers": 30, "createGems": 500, "createFloorPoints": 50000, "goldPerLevel": 0.01, "goldCap": 0.30,
     "raid": { "hpDpsMult": 50, "hpSeconds": 600, "entries": 3, "entrySec": 60, "damageTolerance": 0.02 },
     "war": { "attacksPerDay": 5, "winPoints": 1, "firstTryBonus": 2, "seasonWeeks": 8, "ratingResetPct": 0.5, "matchmakingCron": "0 0 * * 1" } }

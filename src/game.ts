@@ -12,7 +12,7 @@ import { buyHeroLevels, movePartyMember, setCreepMix, summonHero, togglePartyMem
 import { claimDailyFood, feedPet, onBossCleared } from './sim/pets';
 import { awaken, unite } from './sim/forms';
 import { buyArtifact, equipArtifact, unequipArtifact, upgradeArtifact } from './sim/artifacts';
-import { applyPrestige, buyPermGold, goldMult } from './sim/prestige';
+import { applyPrestige, buyPermGold, claimStarterPack, goldMult } from './sim/prestige';
 import {
   createDungeonBattle, dungeonReward, dungeonUnlocked, grantDungeonReward, resetRuns, runsLeft, spendRun, stepDungeon,
 } from './sim/dungeons';
@@ -29,6 +29,8 @@ export const eggPopup = writable<string | null>(null);
 export const heroCard = writable<string | null>(null);
 /** Окно подтверждения воскрешения. */
 export const prestigeAsk = writable(false);
+/** Герой, только что призванный (попап-раскрытие). */
+export const summonReveal = writable<string | null>(null);
 export const dungeonRun = writable<string | null>(null);
 export const dungeonResult = writable<{ id: string; waves: number; amount: number } | null>(null);
 
@@ -128,7 +130,12 @@ export const buyArtifactAction = (id: string) => act(s => buyArtifact(s, id));
 export const upgradeArtifactAction = (id: string) => act(s => upgradeArtifact(s, id), true);
 export const equipArtifactAction = (hero: string, id: string) => act(s => equipArtifact(s, hero, id), true);
 export const unequipArtifactAction = (hero: string, id: string) => act(s => unequipArtifact(s, hero, id), true);
-export const summonHeroAction = (id: string, pay: 'crystals' | 'gems' = 'crystals') => act(s => summonHero(s, id, pay));
+export function summonHeroAction(id: string, pay: 'crystals' | 'gems' = 'crystals') {
+  const had = !!get(save).heroes[id];
+  act(s => summonHero(s, id, pay));
+  if (!had && get(save).heroes[id]) summonReveal.set(id);
+}
+export const claimStarterPackAction = () => act(claimStarterPack);
 export const togglePartyAction = (id: string) => act(s => togglePartyMember(s, id), true);
 export const movePartyAction = (id: string, dir: -1 | 1) => act(s => movePartyMember(s, id, dir), true);
 export const setCreepMixAction = (type: 'infantry' | 'ranged', v: number) => act(s => setCreepMix(s, type, v), true);

@@ -105,7 +105,7 @@ export interface GameState {
   heroes: Record<string, HeroSave>;
   party: string[];
   artifacts: Record<string, number>; // купленные артефакты → уровень 1..50
-  perks: { permGold: boolean };      // разовые покупки за самоцветы
+  perks: { permGold: boolean; starterPack: boolean }; // разовые покупки за самоцветы и бесплатный стартовый набор
   dailyFoodDay: string;              // дата последнего забранного дневного корма
   village: Record<string, number>;
   base: Record<string, number>;

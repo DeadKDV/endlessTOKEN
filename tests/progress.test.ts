@@ -13,8 +13,9 @@ import {
   artifactById, artifactSlots, artifactUpgradeCost, artifactValue, buyArtifact, equipArtifact, heroArtifactSum, upgradeArtifact,
 } from '../src/sim/artifacts';
 import { buyHeroLevels, partySlots, setCreepMix, summonHero, togglePartyMember } from '../src/sim/heroes';
-import { applyPrestige, prestigeGain, goldMult, buyPermGold } from '../src/sim/prestige';
-import { deserialize } from '../src/save/storage';
+import { applyPrestige, prestigeGain, goldMult, buyPermGold, claimStarterPack } from '../src/sim/prestige';
+import economy from '../src/data/economy.json';
+import { deserialize, serialize } from '../src/save/storage';
 
 const mk = () => newGameState(0);
 
@@ -319,16 +320,24 @@ describe('миграция сейва', () => {
       dungeonRuns: { date: '2026-10-17' }, ads: { speedUntil: 0, boostUntil: 0, resourcesToday: 0, gemsToday: 0, day: '2026-10-17' },
     };
     const s = deserialize(LZString.compressToBase64(JSON.stringify(v1)));
-    expect(s.v).toBe(2);
+    expect(s.v).toBe(3);
     expect(s.runMaxFloor).toBe(42);
     expect(s.artifacts).toEqual({});
-    expect(s.perks).toEqual({ permGold: false });
+    expect(s.perks).toEqual({ permGold: false, starterPack: false });
     expect(s.heroes.alderic).toEqual({ lvl: 7, form: 1, pet: 2, artifacts: [], floorsInParty: 0 });
     expect(s.village).toEqual({ range: 1 });
     expect(s.floor).toBe(30);
     expect(buildParty(s).length).toBe(1);
   });
-  it('v2 не трогается', () => {
+  it('v2 → v3: отметка стартового набора, прогресс сохранён', () => {
+    const { v, perks, ...rest } = mk();
+    const v2 = { ...rest, v: 2, perks: { permGold: true }, gems: 7 };
+    const s = deserialize(LZString.compressToBase64(JSON.stringify(v2)));
+    expect(s.v).toBe(3);
+    expect(s.perks).toEqual({ permGold: true, starterPack: false });
+    expect(s.gems).toBe(7);
+  });
+  it('v3 не трогается', () => {
     const s = mk();
     expect(deserialize(LZString.compressToBase64(JSON.stringify(s)))).toEqual(s);
   });
@@ -340,7 +349,7 @@ describe('золото и магазин', () => {
     expect(goldMult(s)).toBe(1);
     s.crystals = 10; s.artifacts = { royal_seal: 1 }; s.heroes.alderic.lvl = 50; s.heroes.alderic.artifacts = ['royal_seal'];
     expect(goldMult(s)).toBeCloseTo(1.1 * 1.1);
-    expect(goldMult({ ...s, perks: { permGold: true } })).toBeCloseTo(1.1 * 1.1 * 1.1);
+    expect(goldMult({ ...s, perks: { permGold: true, starterPack: false } })).toBeCloseTo(1.1 * 1.1 * 1.1);
   });
   it('вечный ×1.1 за 1000 самоцветов — один раз', () => {
     const s = { ...mk(), gems: 1500 };
@@ -348,6 +357,21 @@ describe('золото и магазин', () => {
     expect(r.gems).toBe(500); expect(r.perks.permGold).toBe(true);
     expect(buyPermGold({ ...r, gems: 5000 })).toEqual({ ...r, gems: 5000 });
     expect(buyPermGold({ ...s, gems: 999 }).perks.permGold).toBe(false);
+  });
+});
+
+describe('стартовый набор', () => {
+  it('бесплатно и один раз: самоцветы, золото, корм', () => {
+    const s = { ...mk(), gems: 5, gold: '10', petFood: 1 };
+    const p = economy.gems.starterPack;
+    const r = claimStarterPack(s);
+    expect(r.gems).toBe(5 + p.gems); expect(Number(r.gold)).toBe(10 + p.gold); expect(r.petFood).toBe(1 + p.petFood);
+    expect(r.perks.starterPack).toBe(true);
+    expect(claimStarterPack(r)).toBe(r);
+  });
+  it('переживает сериализацию: повторно не выдаётся', () => {
+    const r = deserialize(serialize(claimStarterPack(mk())));
+    expect(claimStarterPack(r)).toBe(r);
   });
 });
 
