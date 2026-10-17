@@ -1,11 +1,13 @@
 /** Портреты героев для интерфейса: первый кадр idle из того же источника, что и бой (прото → атлас → процедурный). */
 import { HEROES } from '../sim/party';
 import { procCanvas } from './procSprites';
+import { artIndex } from './artSet';
 import type { Race, Role } from '../sim/types';
 
 interface SheetData {
   frames: Record<string, { frame: { x: number; y: number; w: number; h: number } }>;
   animations?: Record<string, string[]>;
+  meta?: { tint?: number };
 }
 
 const cache = new Map<string, Promise<string>>();
@@ -27,10 +29,19 @@ const getImage = (url: string) => {
 };
 
 /** Вырезает кадр и обрезает прозрачные поля, чтобы герой занимал всю рамку. */
-function cropToDataUrl(img: CanvasImageSource, x: number, y: number, w: number, h: number): string {
+function cropToDataUrl(img: CanvasImageSource, x: number, y: number, w: number, h: number, tint?: number): string {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const ctx = c.getContext('2d', { willReadFrequently: true })!;
   ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+  if (tint !== undefined) {
+    // перекраска как tint в PixiJS: умножение цвета, прозрачность берём у исходника
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = `#${tint.toString(16).padStart(6, '0')}`;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+  }
   const d = ctx.getImageData(0, 0, w, h).data;
   let x0 = w, y0 = h, x1 = -1, y1 = -1;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (d[(j * w + i) * 4 + 3] > 8) {
@@ -43,13 +54,13 @@ function cropToDataUrl(img: CanvasImageSource, x: number, y: number, w: number, 
 }
 
 async function fromProto(id: string, form: number): Promise<string> {
-  const ids: string[] = (await getJson(`${base()}proto/index.json`)).ids ?? [];
-  if (!ids.includes(id)) throw new Error('no proto');
-  const data: SheetData = await getJson(`${base()}proto/${id}.json`);
+  const set = await artIndex();
+  if (!set || !set.ids.includes(id)) throw new Error('no proto');
+  const data: SheetData = await getJson(`${set.dir}${id}.json`);
   const anim = data.animations?.[`f${form}_idle`] ?? data.animations?.f0_idle;
   const r = anim && data.frames[anim[0]]?.frame;
   if (!r) throw new Error('no frame');
-  return cropToDataUrl(await getImage(`${base()}proto/${id}.png`), r.x, r.y, r.w, r.h);
+  return cropToDataUrl(await getImage(`${set.dir}${id}.png`), r.x, r.y, r.w, r.h, data.meta?.tint);
 }
 
 async function fromAtlas(id: string, form: number): Promise<string> {

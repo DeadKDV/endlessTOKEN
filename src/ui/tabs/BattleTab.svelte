@@ -3,11 +3,23 @@
   import { prestigeGain } from '../../sim/prestige';
   import AdButtons from '../AdButtons.svelte';
   import { t, tpl } from '../text';
+  import { artSet, setArtSet, ART_SETS } from '../../render/artSet';
+
+  const art = artSet();
 
   const gain = $derived(prestigeGain($save));
 </script>
 
 <AdButtons />
+
+<div class="row">
+  <span>{t.battle.art}</span>
+  <span class="art">
+    {#each ART_SETS as a}
+      <button class:on={a === art} onclick={() => a !== art && setArtSet(a)}>{t.battle.artSet[a]}</button>
+    {/each}
+  </span>
+</div>
 
 <div class="row">
   <span>{gain > 0 ? tpl(t.battle.prestigeGain, { n: gain }) : t.battle.prestigeLocked}</span>
@@ -28,6 +40,8 @@
 </div>
 
 <style>
+  .art { display: flex; gap: 4px; }
+  .art button.on { border-color: #ffd54f; color: #ffd54f; }
   .mix { margin-top: 6px; display: grid; gap: 4px; }
   label { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 6px; }
   input { width: 100%; }

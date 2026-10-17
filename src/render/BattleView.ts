@@ -12,6 +12,7 @@ import { BASE_X } from '../sim/battle';
 import { save } from '../game';
 import { procSprite, type ProcTex } from './procSprites';
 import { Backdrop } from './backdrop';
+import { artIndex } from './artSet';
 import races from '../data/races.json';
 import creeps from '../data/creeps.json';
 
@@ -46,10 +47,10 @@ const CREEP_TYPE = new Map<string, CreepType>(
 const FADE_MS = 300, FLASH_MS = 110, LUNGE_MS = 160;
 const TEXT_SMALL = { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff };
 
-interface Proto { sheet: Spritesheet; anchors: Record<string, [number, number]>; charH: Record<string, number>; projectile?: ProjType }
+interface Proto { sheet: Spritesheet; anchors: Record<string, [number, number]>; charH: Record<string, number>; projectile?: ProjType; tint?: number }
 interface UnitView {
   root: Container; hp: Graphics; w: number; h: number; kind: Unit['kind']; dx: number; dy: number;
-  sprite: Sprite; tex?: ProcTex;
+  sprite: Sprite; tex?: ProcTex; baseTint: number;
   lastX: number; lastCd: number; lunge: number; flash: number; moving: number;
   proto?: Proto; anim?: AnimatedSprite; form: number; cur: string; action: string; actionUntil: number; hurtAt: number;
 }
@@ -164,23 +165,17 @@ export class BattleView {
   }
 
   private async loadProtos() {
-    const base = import.meta.env.BASE_URL;
-    let ids: string[];
-    try {
-      const r = await fetch(`${base}proto/index.json`);
-      if (!r.ok) return;
-      ids = (await r.json()).ids ?? [];
-    } catch {
-      return; // слоя нет (404, а dev-сервер может отдать html) — молча пропускаем
-    }
+    const set = await artIndex();
+    if (!set) return; // набора нет или выбрана графика кодом — молча пропускаем
+    const { dir, ids } = set;
     await Promise.all(ids.map(async id => {
       try {
-        const texture = await Assets.load<Texture>(`${base}proto/${id}.png`);
+        const texture = await Assets.load<Texture>(`${dir}${id}.png`);
         texture.source.scaleMode = 'nearest';
-        const data = await (await fetch(`${base}proto/${id}.json`)).json();
+        const data = await (await fetch(`${dir}${id}.json`)).json();
         const sheet = new Spritesheet(texture, data);
         await sheet.parse();
-        this.protos.set(id, { sheet, anchors: data.meta.anchors, charH: data.meta.charH, projectile: data.meta.projectile });
+        this.protos.set(id, { sheet, anchors: data.meta.anchors, charH: data.meta.charH, projectile: data.meta.projectile, tint: data.meta.tint });
       } catch (e) {
         console.warn(`прото-атлас ${id} не загружен`, e);
       }
@@ -262,14 +257,14 @@ export class BattleView {
     if (v.anim) {
       if (now >= v.actionUntil) { v.action = ''; this.setAnim(v, now < v.moving ? 'walk' : 'idle', true); }
       v.sprite.x = now - v.hurtAt < HURT_MS ? -dir * 3 * (1 - (now - v.hurtAt) / HURT_MS) : 0;
-      v.sprite.tint = now < v.flash ? 0xffaaaa : 0xffffff;
+      v.sprite.tint = now < v.flash ? 0xffaaaa : v.baseTint;
       return;
     }
     const lt = (now - v.lunge) / LUNGE_MS;
     v.sprite.x = lt >= 0 && lt < 1 ? dir * 4 * Math.sin(Math.PI * lt) : 0;
     v.sprite.y = now < v.moving ? -Math.abs(Math.sin(now / 90 + u.id)) * 1.5 : 0;
     if (v.tex) v.sprite.texture = now < v.flash ? v.tex.flash : v.tex.tex;
-    else v.sprite.tint = now < v.flash ? 0xffaaaa : 0xffffff;
+    else v.sprite.tint = now < v.flash ? 0xffaaaa : v.baseTint;
   }
 
   private procOf(u: Unit): ProcTex {
@@ -339,7 +334,7 @@ export class BattleView {
     this.world.addChild(root);
     const v: UnitView = {
       root, hp, w, h, kind: u.kind, dx, dy, sprite, tex, lastX: u.x, lastCd: u.attackCooldown, lunge: -1e9, flash: 0, moving: 0,
-      proto, anim, form, cur: `f${form}_idle`, action: '', actionUntil: 0, hurtAt: -1e9,
+      baseTint: proto?.tint ?? sprite.tint, proto, anim, form, cur: `f${form}_idle`, action: '', actionUntil: 0, hurtAt: -1e9,
     };
     this.views.set(u.id, v);
     return v;
