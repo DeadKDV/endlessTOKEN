@@ -25,3 +25,16 @@ export function applyPrestige(s: GameState): GameState {
   for (const [id, h] of Object.entries(s.heroes)) heroes[id] = { ...h, lvl: 1 };
   return { ...s, floor: 1, runMaxFloor: 1, gold: '0', crystals: s.crystals + gained, heroes };
 }
+
+/** Множитель золота: кристаллы × артефакты золота × вечная покупка за самоцветы (×1.1). */
+export function goldMult(s: GameState): number {
+  return (1 + s.crystals * economy.prestige.crystalGoldMultPer) * (1 + partyArtifactSum(s, 'gold_mult'))
+    * (s.perks.permGold ? economy.gems.permanentGold.mult : 1);
+}
+
+/** Магазин: постоянный ×1.1 к золоту за 1000 самоцветов, один раз. */
+export function buyPermGold(s: GameState): GameState {
+  const c = economy.gems.permanentGold.cost;
+  if (s.perks.permGold || s.gems < c) return s;
+  return { ...s, gems: s.gems - c, perks: { ...s.perks, permGold: true } };
+}
