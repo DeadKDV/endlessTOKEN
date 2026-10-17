@@ -2,8 +2,7 @@
   import { save, heroCard, levelUpHero, togglePartyAction, movePartyAction, summonHeroAction } from '../../game';
   import { heroLevelCost } from '../../sim/economy';
   import { HEROES, heroById } from '../../sim/party';
-  import { partySlots } from '../../sim/heroes';
-  import economy from '../../data/economy.json';
+  import { partySlots, summonCost } from '../../sim/heroes';
   import HeroPortrait from '../HeroPortrait.svelte';
   import BuyButtons from '../BuyButtons.svelte';
   import { fmt } from '../format';
@@ -55,8 +54,8 @@
         <HeroPortrait heroId={h.id} size={56} dim />
         <span class="muted">{h.name.ru.split(',')[0]}</span>
         <span class="muted">{t.race[h.race as 'human']} · {t.role[h.role as 'tank']}</span>
-        <button disabled={$save.crystals < economy.prestige.heroSummonCost} onclick={() => summonHeroAction(h.id)}>
-          {t.hero.summon} {tpl(t.hero.summonCrystals, { n: economy.prestige.heroSummonCost })}
+        <button disabled={$save.crystals < summonCost($save)} onclick={() => summonHeroAction(h.id)}>
+          {t.hero.summon} {tpl(t.hero.summonCrystals, { n: summonCost($save) })}
         </button>
       </div>
     {/each}

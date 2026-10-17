@@ -1,10 +1,10 @@
-# Формат сейва (v3)
+# Формат сейва (v4)
 
 `GameState` из `src/sim/types.ts`. Хранится в localStorage (`rv-tycoon.save.v1`, JSON → lz-string base64) и в `saves.state` (jsonb) в Supabase. Золото — строка (Decimal), остальное — числа.
 
 ```json
 {
-  "v": 3,
+  "v": 4,
   "savedAt": 1760712000000,
   "floor": 137, "maxFloor": 212, "runMaxFloor": 150,
   "gold": "4.21e19", "floorPoints": 3840, "crystals": 95, "petFood": 12, "gems": 40,
@@ -12,6 +12,7 @@
   "heroes": { "morven": { "lvl": 184, "form": 2, "pet": 12, "artifacts": ["skull_lich"], "floorsInParty": 77 } },
   "artifacts": { "skull_lich": 7 },
   "perks": { "permGold": false, "starterPack": true },
+  "autoAdvance": true,
   "dailyFoodDay": "2026-10-17",
   "party": ["morven", "groul", "silva", "valtor", "mortis"],
   "village": { "barracks_undead": 61, "range": 14 },
@@ -37,3 +38,7 @@
 ## Изменения v2 → v3
 - `perks.starterPack` — бесплатный стартовый набор уже получен (выдаётся один раз: самоцветы, золото, корм из `economy.gems.starterPack`).
 - Миграция `migrations[2]`: `perks.starterPack = false`.
+
+## Изменения v3 → v4
+- `autoAdvance` — авто-проход этажей (кнопка «Остаться» над панелью). `false` — после победы отряд повторяет этаж: золото идёт, очки этажа, яйца и рост этажа — нет. Нет поля = включено. Тип дополнен в `src/save/autoAdvance.ts` (в `GameState` поле опционально).
+- Миграция `migrations[3]`: `autoAdvance = true`. `newGameState()` отдаёт v3 без поля — `loadLocal` прогоняет его через `migrate`.

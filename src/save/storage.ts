@@ -15,15 +15,20 @@ const migrations: Record<number, (s: any) => any> = {
   }),
   // v2 → v3: отметка получения бесплатного стартового набора
   2: s => ({ ...s, v: 3, perks: { permGold: false, ...s.perks, starterPack: false } }),
+  // v3 → v4: переключатель авто-прохода этажей («Остаться на этаже»); по умолчанию включён, как раньше
+  3: s => ({ ...s, v: 4, autoAdvance: true }),
 };
+
+export function migrate(s: any): GameState {
+  while (migrations[s.v]) s = migrations[s.v](s);
+  return s as GameState;
+}
 
 export function serialize(s: GameState): string {
   return LZString.compressToBase64(JSON.stringify({ ...s, savedAt: Date.now() }));
 }
 export function deserialize(blob: string): GameState {
-  let s = JSON.parse(LZString.decompressFromBase64(blob) ?? '{}');
-  while (migrations[s.v]) s = migrations[s.v](s);
-  return s as GameState;
+  return migrate(JSON.parse(LZString.decompressFromBase64(blob) ?? '{}'));
 }
 export function saveLocal(s: GameState) {
   try { localStorage.setItem(KEY, serialize(s)); } catch { /* приватный режим */ }
@@ -33,7 +38,7 @@ export function loadLocal(): GameState {
     const blob = localStorage.getItem(KEY);
     if (blob) return deserialize(blob);
   } catch { /* битый сейв → новый */ }
-  return newGameState();
+  return migrate(newGameState());
 }
 export const exportSave = (s: GameState) => serialize(s);
 export const importSave = (blob: string) => deserialize(blob);

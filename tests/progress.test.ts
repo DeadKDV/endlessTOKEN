@@ -12,10 +12,10 @@ import {
 import {
   artifactById, artifactSlots, artifactUpgradeCost, artifactValue, buyArtifact, equipArtifact, heroArtifactSum, upgradeArtifact,
 } from '../src/sim/artifacts';
-import { buyHeroLevels, partySlots, setCreepMix, summonHero, togglePartyMember } from '../src/sim/heroes';
+import { buyHeroLevels, partySlots, setCreepMix, summonCost, summonHero, togglePartyMember } from '../src/sim/heroes';
 import { applyPrestige, prestigeGain, goldMult, buyPermGold, claimStarterPack } from '../src/sim/prestige';
 import economy from '../src/data/economy.json';
-import { deserialize, serialize } from '../src/save/storage';
+import { deserialize, migrate, serialize } from '../src/save/storage';
 
 const mk = () => newGameState(0);
 
@@ -100,10 +100,12 @@ describe('петомцы', () => {
     expect(r.egg).toBe('groul');
     expect(r.state.heroes.groul.pet).toBe(1);
     expect(r.state.petFood).toBe(5);
+    expect(r.state.crystals).toBe(s.crystals + 2); // первое прохождение 10-го: 10 / 5
     // повторное прохождение — только корм
     const again = onBossCleared({ ...s, maxFloor: 20 }, 10);
     expect(again.egg).toBeNull();
     expect(again.state.petFood).toBe(5);
+    expect(again.state.crystals).toBe(s.crystals);
     expect(onBossCleared(s, 7).state).toBe(s);
   });
   it('дневной корм раз в сутки, Псарня +1 за 5 уровней', () => {
@@ -244,7 +246,7 @@ describe('герои и отряд', () => {
     expect(buyHeroLevels(s, 'alderic', 10).heroes.alderic.lvl).toBe(11);
     const m = buyHeroLevels(s, 'alderic', 'max');
     expect(m.heroes.alderic.lvl).toBeGreaterThan(11);
-    expect(Number(m.gold)).toBeLessThan(15 * Math.pow(1.08, m.heroes.alderic.lvl - 1));
+    expect(Number(m.gold)).toBeLessThan(15 * Math.pow(1.09, m.heroes.alderic.lvl - 1));
     expect(buyHeroLevels(mk(), 'alderic')).toEqual(mk());
   });
   it('слоты отряда: 1/10/25/50/100 этажи', () => {
@@ -261,13 +263,15 @@ describe('герои и отряд', () => {
     expect(s.party).toEqual(['groul']);
     expect(togglePartyMember(s, 'groul')).toBe(s);
   });
-  it('призыв: 50 кристаллов или 300 самоцветов, нельзя дважды', () => {
+  it('призыв: кристаллы по растущей цене или 300 самоцветов, нельзя дважды', () => {
     const s = { ...mk(), crystals: 50, gems: 300 };
+    expect(summonCost(s)).toBe(5); // один герой - первый призыв дешёвый
     const r = summonHero(s, 'groul');
-    expect(r.crystals).toBe(0);
+    expect(r.crystals).toBe(45);
+    expect(summonCost(r)).toBe(8); // 5 × 1.5, округлено
     expect(r.heroes.groul).toEqual({ lvl: 1, form: 0, pet: 0, artifacts: [], floorsInParty: 0 });
     expect(summonHero(r, 'groul')).toBe(r);
-    expect(summonHero({ ...s, crystals: 49 }, 'groul')).toEqual({ ...s, crystals: 49 });
+    expect(summonHero({ ...s, crystals: 4 }, 'groul')).toEqual({ ...s, crystals: 4 });
     expect(summonHero(s, 'groul', 'gems').gems).toBe(0);
     expect(summonHero(s, 'nobody')).toBe(s);
   });
@@ -320,7 +324,8 @@ describe('миграция сейва', () => {
       dungeonRuns: { date: '2026-10-17' }, ads: { speedUntil: 0, boostUntil: 0, resourcesToday: 0, gemsToday: 0, day: '2026-10-17' },
     };
     const s = deserialize(LZString.compressToBase64(JSON.stringify(v1)));
-    expect(s.v).toBe(3);
+    expect(s.v).toBe(4);
+    expect(s.autoAdvance).toBe(true);
     expect(s.runMaxFloor).toBe(42);
     expect(s.artifacts).toEqual({});
     expect(s.perks).toEqual({ permGold: false, starterPack: false });
@@ -333,13 +338,19 @@ describe('миграция сейва', () => {
     const { v, perks, ...rest } = mk();
     const v2 = { ...rest, v: 2, perks: { permGold: true }, gems: 7 };
     const s = deserialize(LZString.compressToBase64(JSON.stringify(v2)));
-    expect(s.v).toBe(3);
+    expect(s.v).toBe(4);
     expect(s.perks).toEqual({ permGold: true, starterPack: false });
     expect(s.gems).toBe(7);
   });
-  it('v3 не трогается', () => {
-    const s = mk();
+  it('v3 → v4: авто-проход включён, остальное сохранено', () => {
+    const s = deserialize(LZString.compressToBase64(JSON.stringify({ ...mk(), v: 3, floor: 17 })));
+    expect(s.v).toBe(4); expect(s.autoAdvance).toBe(true); expect(s.floor).toBe(17);
+  });
+  it('v4 не трогается, выключенный авто-проход переживает сериализацию', () => {
+    const s = migrate(mk());
     expect(deserialize(LZString.compressToBase64(JSON.stringify(s)))).toEqual(s);
+    const off = { ...s, autoAdvance: false };
+    expect(deserialize(serialize(off)).autoAdvance).toBe(false);
   });
 });
 

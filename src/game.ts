@@ -17,6 +17,8 @@ import {
   createDungeonBattle, dungeonReward, dungeonUnlocked, grantDungeonReward, resetRuns, runsLeft, spendRun, stepDungeon,
 } from './sim/dungeons';
 import { loadLocal, saveLocal } from './save/storage';
+import { autoAdvanceOn } from './save/autoAdvance';
+import { t, tpl } from './ui/text';
 import economy from './data/economy.json';
 
 export const save = writable<GameState>(loadLocal());
@@ -33,6 +35,11 @@ export const prestigeAsk = writable(false);
 export const summonReveal = writable<string | null>(null);
 export const dungeonRun = writable<string | null>(null);
 export const dungeonResult = writable<{ id: string; waves: number; amount: number } | null>(null);
+
+/** Короткое всплывающее сообщение (id растёт, чтобы повтор того же текста показывался заново). */
+export const toast = writable<{ id: number; text: string } | null>(null);
+let toastId = 0;
+export function showToast(text: string) { toast.set({ id: ++toastId, text }); }
 
 let acc = 0;
 const TICK = economy.tickMs;
@@ -73,15 +80,22 @@ export function update(dtMs: number) {
 
 /** Поражение, как в Endless Frontier: золото за убитых остаётся, отряд откатывается на этаж назад и фармит. */
 function onFloorLose(b: BattleState) {
+  const to = Math.max(1, get(save).floor - 1);
   save.update(s => ({
     ...s,
     gold: (Number(s.gold) + b.goldEarned * goldMult(s)).toString(),
-    floor: Math.max(1, s.floor - 1),
+    floor: to,
   }));
+  showToast(tpl(t.progress.rollback, { n: to }));
   startFloor();
 }
 
 function onFloorWin(b: BattleState) {
+  if (!autoAdvanceOn(get(save))) { // «Остаться на этаже»: только золото, этаж повторяется
+    save.update(s => ({ ...s, gold: (Number(s.gold) + b.goldEarned * goldMult(s)).toString() }));
+    startFloor();
+    return;
+  }
   const got: { egg: string | null } = { egg: null };
   save.update(s => {
     let n: GameState = { ...s, heroes: { ...s.heroes } };
@@ -141,6 +155,7 @@ export const movePartyAction = (id: string, dir: -1 | 1) => act(s => movePartyMe
 export const setCreepMixAction = (type: 'infantry' | 'ranged', v: number) => act(s => setCreepMix(s, type, v), true);
 export const claimFood = () => act(s => claimDailyFood(s, localDate(Date.now())));
 export const resetDungeonRuns = () => act(s => resetRuns(s, Date.now()));
+export const toggleAutoAdvance = () => act(s => ({ ...s, autoAdvance: !autoAdvanceOn(s) }));
 export const buyPermGoldAction = () => act(buyPermGold);
 
 /** Воскрешение: сброс этажа, золота и уровней героев. Во время подземелья недоступно. */

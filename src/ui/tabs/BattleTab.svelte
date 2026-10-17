@@ -2,6 +2,7 @@
   import { save, dungeonRun, prestigeAsk, setCreepMixAction } from '../../game';
   import { prestigeGain } from '../../sim/prestige';
   import AdButtons from '../AdButtons.svelte';
+  import QuickLevel from '../QuickLevel.svelte';
   import { t, tpl } from '../text';
   import { artSet, setArtSet, ART_SETS } from '../../render/artSet';
 
@@ -11,6 +12,7 @@
 </script>
 
 <AdButtons />
+<QuickLevel />
 
 <div class="row">
   <span>{t.battle.art}</span>
@@ -44,5 +46,5 @@
   .art button.on { border-color: #ffd54f; color: #ffd54f; }
   .mix { margin-top: 6px; display: grid; gap: 4px; }
   label { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 6px; }
-  input { width: 100%; }
+  input { width: 100%; min-height: 40px; }
 </style>
