@@ -49,3 +49,17 @@ describe('вражеская база', () => {
     expect(base.alive).toBe(false);
   });
 });
+
+describe('подземелье на неподвижном экране', () => {
+  it('волны выходят справа, никто не уходит за край поля', async () => {
+    const { createDungeonBattle } = await import('../src/sim/dungeons');
+    const s = newGameState(0);
+    s.heroes.alderic.lvl = 200;
+    const b = createDungeonBattle(s, 'crypt', buildParty(s), 3);
+    for (let i = 0; i < 600 && !b.finished; i++) {
+      step(b);
+      for (const u of b.units) if (u.alive) expect(u.x).toBeLessThanOrEqual(BASE_X + 1);
+    }
+    expect(b.wave).toBeGreaterThan(2); // сильный отряд выбил несколько волн
+  });
+});

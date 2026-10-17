@@ -11,7 +11,6 @@ const B = economy.battle;
 const ticks = (sec: number) => Math.round(sec * 1000 / economy.tickMs);
 const WAVES = economy.floor.wavesPerFloor;
 const PARTY_START_X = 0;
-const ENEMY_START_X = 10;
 /** Где стоит вражеская база (клетки). Рендер прижимает её к правому краю экрана. */
 export const BASE_X = 14;
 /** Откуда выходят волны обычного этажа - от базы. */
@@ -39,7 +38,8 @@ export function createBattle(floor: number, party: PartyMember[], seed: number, 
     });
   });
   const s: BattleState = { floor, wave: 1, tick: 0, units, seed, rngState: seed, goldEarned: 0, finished: null, waveGen };
-  if (waveGen) s.units.push(...waveGen(1, ENEMY_START_X));
+  // подземелье: без баз, но волны выходят из той же точки справа - экран неподвижный
+  if (waveGen) s.units.push(...waveGen(1, WAVE_X));
   else {
     // Как в Endless Frontier: у каждой стороны база, юниты выходят из неё по очереди.
     const heroHp = units.filter(u => u.kind === 'hero').reduce((a, u) => a + u.maxHp, 0);
@@ -100,7 +100,7 @@ export function step(s: BattleState): BattleState {
     // подземелье: волна за волной, пока не выйдет время
     if (!waveLeft) {
       s.wave++;
-      s.units.push(...s.waveGen(s.wave, Math.max(...party.map(u => u.x)) + ENEMY_START_X));
+      s.units.push(...s.waveGen(s.wave, WAVE_X));
       s.tick++;
       return s;
     }

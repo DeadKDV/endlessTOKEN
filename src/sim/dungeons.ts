@@ -46,7 +46,7 @@ export function dungeonWaveGen(race: Race, scaleFloor: number): WaveGen {
     const hp = mobHp(scaleFloor) * k; const atk = mobAtk(scaleFloor) * k;
     return Array.from({ length: economy.floor.mobsPerWave }, (_, i) => {
       const ranged = i % 3 === 2;
-      return makeUnit('mob', race, ranged ? 'mob_ranged' : 'mob_melee', startX + i * 0.6, hp * (ranged ? 0.6 : 1), atk, 1.0, ranged ? 5 : 1);
+      return makeUnit('mob', race, ranged ? 'mob_ranged' : 'mob_melee', startX - i * 0.6, hp * (ranged ? 0.6 : 1), atk, 1.0, ranged ? 5 : 1);
     });
   };
 }
