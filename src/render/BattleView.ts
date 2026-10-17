@@ -24,7 +24,7 @@ export const LOGICAL_H = 640;
 const FIELD_L = -3;                             // тылы отряда
 const FIELD_R = BASE_X + 1;                     // база прижата к правому краю
 const CELL = LOGICAL_W / (FIELD_R - FIELD_L);   // пикселей на клетку: поле целиком на экране
-const GROUND_Y = 420;      // линия земли в логических пикселях
+import { GROUND_Y } from './layout';
 const POPUP_MS = 800;
 const PROTO_H: Record<Unit['kind'], number> = { hero: 56, creep: 32, mob: 38, boss: 84, base: 0 }; // рост прото-юнита, px (крип ~57% героя; базы - здания в коде)
 const PROC_SCALE: Record<Unit['kind'], number> = { hero: 2, creep: 1.7, mob: 1.9, boss: 1.6, base: 1.4 }; // масштаб процедурных спрайтов

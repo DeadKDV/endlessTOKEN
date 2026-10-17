@@ -8,7 +8,7 @@ import { isBossFloor, isRaidBossFloor } from '../sim/floor';
 
 const MAX = 200;
 const GOLD = 0xffd54a;
-const GROUND = 420;
+import { GROUND_Y as GROUND } from './layout';
 type Cls = 'dmg' | 'cc' | 'heal' | 'buff' | 'shield';
 const SELF = new Set(['buff_self', 'buff_self_conditional', 'shield_self', 'dodge', 'double_cast', 'reflect', 'lifesteal', 'stack_atk', 'revive_self', 'sacrifice_buff', 'teleport_backline', 'reset_on_kill', 'min_hp']);
 const ALLY = new Set(['buff_party', 'buff_creeps', 'invuln_party', 'invuln_creeps', 'damage_reduction_party', 'lifesteal_party', 'airborne_party', 'ghost_creeps', 'crit_all', 'summon']);

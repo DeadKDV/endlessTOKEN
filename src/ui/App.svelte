@@ -51,8 +51,8 @@
 
 <style>
   .top { position: absolute; top: 0; left: 0; right: 0; height: 40px; display: flex; justify-content: space-around; align-items: center; color: #fff; font: 14px monospace; background: #15152a; }
-  /* Сцена боя занимает верх холста (земля на 420/640 = 65,6%); док начинается сразу под ней. */
-  .dock { position: absolute; top: 66%; left: 0; right: 0; bottom: 56px; display: flex; flex-direction: column; background: #101020; }
+  /* Сцена боя занимает верх холста (земля на 290/640, подписи под ней до ~320 = 50%); док начинается сразу под ней. */
+  .dock { position: absolute; top: 50%; left: 0; right: 0; bottom: 56px; display: flex; flex-direction: column; background: #101020; }
   .panel { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 8px; color: #ddd; font: 13px monospace; background: #101020; }
   nav { position: absolute; bottom: 0; left: 0; right: 0; height: 56px; display: flex; background: #15152a; }
   nav button { position: relative; flex: 1; min-width: 0; background: none; border: 0; border-radius: 0; color: #888; font: 600 10px system-ui, sans-serif; padding: 0; overflow: hidden; }
