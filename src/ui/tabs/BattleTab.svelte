@@ -51,7 +51,10 @@
   <div>{t.creepType.healer} {Math.round($save.creepMix.healer * 100)}%</div>
 </div>
 
+<div class="build">{t.battle.build} {__BUILD__} UTC</div>
+
 <style>
+  .build { margin-top: 10px; color: #555; font-size: 11px; text-align: center; }
   .art { display: flex; gap: 4px; align-items: center; }
   .art input[type=range] { width: 90px; min-height: 0; }
   .art button.on { border-color: #ffd54f; color: #ffd54f; }

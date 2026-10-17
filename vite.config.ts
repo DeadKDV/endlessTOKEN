@@ -4,6 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
 export default defineConfig({
+  // метка сборки внизу вкладки «Бой»: видно, обновилась ли игра у игрока
+  define: { __BUILD__: JSON.stringify(new Date().toISOString().slice(0, 16).replace('T', ' ')) },
   plugins: [
     svelte(),
     VitePWA({
