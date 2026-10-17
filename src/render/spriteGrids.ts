@@ -116,18 +116,32 @@ function boss(race: Race, raid: boolean): Grid {
   return g;
 }
 
+/** Вражеская крепость: две башни с остроконечными крышами цвета расы мобов, ворота, стяг. */
 function fortress(): Grid {
   const g = mk(40, 60);
   R(g, 4, 26, 32, 34, 'S');
   for (let y = 30; y < 60; y += 6) R(g, 4, y, 32, 1, 'T');
   for (let x = 4; x < 36; x += 6) R(g, x, 22, 4, 4, 'S');
-  R(g, 1, 12, 9, 48, 'S'); R(g, 30, 12, 9, 48, 'S');
-  for (const x of [1, 6, 30, 35]) R(g, x, 8, 3, 4, 'S');
-  for (let y = 16; y < 58; y += 6) { R(g, 1, y + 5, 9, 1, 'T'); R(g, 30, y + 5, 9, 1, 'T'); }
-  R(g, 5, 18, 1, 4, 'e'); R(g, 34, 18, 1, 4, 'e');
+  R(g, 1, 14, 9, 46, 'S'); R(g, 30, 14, 9, 46, 'S');
+  for (let i = 0; i < 6; i++) { R(g, 1 + i, 14 - i - 1, 9 - 2 * i, 1, 'a'); R(g, 31 + i, 14 - i - 1, 9 - 2 * i, 1, 'a'); }
+  for (let y = 18; y < 58; y += 6) { R(g, 1, y + 5, 9, 1, 'T'); R(g, 30, y + 5, 9, 1, 'T'); }
+  R(g, 5, 20, 1, 4, 'e'); R(g, 34, 20, 1, 4, 'e');
   R(g, 15, 40, 10, 20, 'e'); R(g, 16, 38, 8, 2, 'e'); R(g, 17, 36, 6, 2, 'e');
   for (let x = 17; x < 24; x += 3) R(g, x, 38, 1, 22, 'T');
   R(g, 20, 4, 1, 18, 'h'); R(g, 21, 4, 8, 6, 'a'); R(g, 23, 6, 2, 2, 'W');
+  return g;
+}
+
+/** Наш лагерь: шатёр со знаменем цвета расы за частоколом. */
+function camp(): Grid {
+  const g = mk(36, 44);
+  for (let y = 12; y < 31; y++) { const hw = Math.round((y - 12) * 0.8); R(g, 18 - hw, y, 2 * hw + 1, 1, 'W'); }
+  R(g, 17, 14, 3, 17, 'a'); R(g, 16, 24, 5, 7, 'e'); P(g, 18, 10, 'g'); R(g, 18, 11, 1, 2, 'h');
+  R(g, 2, 33, 32, 11, 'h');
+  for (let x = 2; x < 34; x += 4) { R(g, x, 30, 3, 3, 'h'); R(g, x + 3, 31, 1, 13, 'k'); }
+  R(g, 14, 35, 8, 9, 'e');
+  R(g, 3, 2, 1, 31, 'h'); P(g, 3, 1, 'g'); R(g, 4, 3, 10, 7, 'a'); R(g, 6, 5, 3, 3, 'c');
+  R(g, 32, 22, 1, 11, 'h'); R(g, 31, 20, 3, 2, 'g');
   return g;
 }
 
@@ -151,7 +165,7 @@ export function buildGrid(s: SpriteSpec): Grid {
   let g: Grid;
   if (s.kind === 'hero') g = hero(s.race, s.role ?? 'fighter');
   else if (s.kind === 'boss') g = boss(s.race, !!s.raid);
-  else if (s.kind === 'base') g = fortress();
+  else if (s.kind === 'base') g = s.enemy ? fortress() : camp();
   else if (s.kind === 'mob') g = monster(s.race, s.ctype === 'ranged');
   else g = creep(s.race, s.ctype ?? 'infantry');
   return finish(g, (s.kind === 'hero' && (s.form ?? 0) >= 2) || !!s.raid);
@@ -167,11 +181,12 @@ export function paletteOf(s: SpriteSpec): Record<string, RGBA> {
   const accent = hex(s.race === 'undead' || s.race === 'dwarf' ? p[2] : p[3]);
   const gold = (s.form ?? 0) >= 1 || s.raid;
   const outline: RGBA = gold ? [255, 213, 79, 255] : s.enemy ? [176, 42, 42, 255] : [16, 16, 24, 255];
+  const wall: Record<string, RGBA> = s.kind === 'base' && s.enemy ? { S: [88, 88, 104, 255], T: [58, 58, 72, 255] } : { S: [138, 138, 154, 255], T: [95, 95, 112, 255] };
   return {
     o: outline, H: [255, 213, 79, 90],
     a: shade(hex(p[1]), k), d: shade(hex(p[1]), 0.55 * k), c: shade(accent, s.enemy ? 0.85 : 1),
     s: shade(hex(SKIN[s.race]), s.enemy ? 0.88 : 1), k: [42, 29, 18, 255], w: [207, 216, 220, 255],
     h: [141, 110, 99, 255], g: [255, 213, 79, 255], W: [245, 245, 245, 255], e: [16, 16, 24, 255],
-    b: [192, 118, 58, 255], S: [138, 138, 154, 255], T: [95, 95, 112, 255],
+    b: [192, 118, 58, 255], ...wall,
   };
 }

@@ -3,7 +3,7 @@
  * Камера неподвижна: поле от тылов отряда (x=-3) до вражеской базы (BASE_X) целиком на экране, земля на y=420.
  * Кадр юнита берётся из атласа public/atlases/<раса> (см. scripts/pack-atlas.mjs) по basename поля sprite;
  * без атласа — процедурный спрайт (procSprites), прямоугольник цвета расы — лишь крайний фоллбек.
- * Высший приоритет — покадровые атласы public/proto (index.json со списком id): нет файла — слой молча отключён.
+ * Базы - здания (procSprites), в прото-слое их нет. Высший приоритет — покадровые атласы public/proto (index.json со списком id): нет файла — слой молча отключён.
  */
 import { AnimatedSprite, Application, Assets, Container, Graphics, Sprite, Spritesheet, Text, Texture } from 'pixi.js';
 import { get } from 'svelte/store';
@@ -14,7 +14,6 @@ import { procSprite, type ProcTex } from './procSprites';
 import { Backdrop } from './backdrop';
 import races from '../data/races.json';
 import creeps from '../data/creeps.json';
-import economy from '../data/economy.json';
 
 type HeroDef = { id: string; role: Role; forms: { sprite?: string }[] };
 
@@ -24,10 +23,14 @@ const FIELD_L = -3;                             // тылы отряда
 const FIELD_R = BASE_X + 1;                     // база прижата к правому краю
 const CELL = LOGICAL_W / (FIELD_R - FIELD_L);   // пикселей на клетку: поле целиком на экране
 const GROUND_Y = 420;      // линия земли в логических пикселях
-const WAVES = economy.floor.wavesPerFloor;
 const POPUP_MS = 800;
-const PROTO_H: Record<Unit['kind'], number> = { hero: 56, creep: 36, mob: 36, boss: 84, base: 96 }; // рост прото-юнита, px
-const PROJ_SPEED = 14;     // клеток/с
+const PROTO_H: Record<Unit['kind'], number> = { hero: 56, creep: 32, mob: 38, boss: 84, base: 0 }; // рост прото-юнита, px (крип ~57% героя; базы - здания в коде)
+const PROC_SCALE: Record<Unit['kind'], number> = { hero: 2, creep: 1.7, mob: 1.9, boss: 1.6, base: 1.4 }; // масштаб процедурных спрайтов
+type ProjType = 'arrow' | 'bullet' | 'cannon' | 'orb' | 'heal';
+const PROJ: Record<ProjType, { speed: number; arc: number }> = {
+  arrow: { speed: 14, arc: 12 }, bullet: { speed: 34, arc: 0 }, cannon: { speed: 9, arc: 24 }, orb: { speed: 14, arc: 3 }, heal: { speed: 12, arc: 3 },
+};
+const ROWS = 3;            // ряды по глубине: юниты не стоят одной кучей
 const ATTACK_MS = 420, HURT_MS = 250, DEATH_MS = 700;
 
 const HEROES = new Map<string, HeroDef>(
@@ -43,16 +46,16 @@ const CREEP_TYPE = new Map<string, CreepType>(
 const FADE_MS = 300, FLASH_MS = 110, LUNGE_MS = 160;
 const TEXT_SMALL = { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff };
 
-interface Proto { sheet: Spritesheet; anchors: Record<string, [number, number]>; charH: Record<string, number> }
+interface Proto { sheet: Spritesheet; anchors: Record<string, [number, number]>; charH: Record<string, number>; projectile?: ProjType }
 interface UnitView {
-  root: Container; hp: Graphics; w: number; h: number;
+  root: Container; hp: Graphics; w: number; h: number; kind: Unit['kind']; dx: number; dy: number;
   sprite: Sprite; tex?: ProcTex;
   lastX: number; lastCd: number; lunge: number; flash: number; moving: number;
   proto?: Proto; anim?: AnimatedSprite; form: number; cur: string; action: string; actionUntil: number; hurtAt: number;
 }
 interface Proj {
   g: Graphics; x0: number; y0: number; x1: number; y1: number; born: number; dur: number; arc: number;
-  target: Unit; dmg: number; pu?: Unit;
+  target: Unit; tdx: number; dmg: number; pu?: Unit; fx?: boolean;
 }
 interface Popup { t: Text; born: number; y0: number }
 interface Row { c: Container; g: Graphics; t: Text }
@@ -61,7 +64,7 @@ export class BattleView {
   app = new Application();
   world = new Container();
   private views = new Map<number, UnitView>();
-  private dying: { v: UnitView; born: number }[] = [];
+  private dying: { v: UnitView; born: number; deb?: { g: Graphics; vx: number; vy: number }[] }[] = [];
   private backdrop = new Backdrop(GROUND_Y, LOGICAL_H);
   private lastHp = new Map<number, number>();
   private sheets = new Map<string, Spritesheet>();
@@ -70,6 +73,7 @@ export class BattleView {
   private popups: Popup[] = [];
   private bossRow = makeRow();
   private baseRow = makeRow();
+  private ownBaseRow = makeRow();
   private floorLabel = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 11, fill: 0xffffff } });
 
   async init(host: HTMLElement) {
@@ -79,9 +83,11 @@ export class BattleView {
     host.appendChild(this.app.canvas);
     this.bossRow.c.position.set(0, 42);
     this.baseRow.c.position.set(0, 62);
+    this.ownBaseRow.c.position.set(0, 62);
     this.floorLabel.position.set(8, GROUND_Y + 4);
     this.world.x = -FIELD_L * CELL;
-    this.app.stage.addChild(this.backdrop, this.world, this.bossRow.c, this.baseRow.c, this.floorLabel);
+    this.world.sortableChildren = true;
+    this.app.stage.addChild(this.backdrop, this.world, this.bossRow.c, this.baseRow.c, this.ownBaseRow.c, this.floorLabel);
     await this.loadAtlases();
     await this.loadProtos();
   }
@@ -91,7 +97,7 @@ export class BattleView {
     this.backdrop.scroll(0);
     const byId = new Map(s.units.map(u => [u.id, u]));
     for (const u of s.units) {
-      if (!u.alive) continue;
+      if (!u.alive || u.pending) continue;
       const v = this.views.get(u.id) ?? this.makeView(u);
       if (u.attackCooldown > v.lastCd + 1e-6) this.onAttack(v, u, s, now);
       v.lastCd = u.attackCooldown;
@@ -103,22 +109,25 @@ export class BattleView {
       const prev = this.lastHp.get(u.id);
       if (prev !== undefined && u.hp < prev) this.popup(u, prev - u.hp, now);
       hp.set(u.id, u.hp);
-      if (!u.alive) continue;
+      if (!u.alive || u.pending) continue;
       seen.add(u.id);
       const v = this.views.get(u.id)!;
       if (prev !== undefined && u.hp < prev) { v.flash = now + FLASH_MS; v.hurtAt = now; this.act(v, 'hurt', HURT_MS, now); }
       this.animate(v, u, now);
       const px = u.x * CELL;
-      // база не вылезает за правый край экрана
-      v.root.position.set(u.kind === 'base' ? Math.min(px, LOGICAL_W - 2 + FIELD_L * CELL - v.sprite.width / 2) : px, GROUND_Y);
-      drawHp(v.hp, u, v.w, v.h);
+      // база не вылезает за края экрана
+      const half = v.sprite.width / 2;
+      v.root.position.set(u.kind === 'base' ? Math.min(Math.max(px, 2 + (FIELD_L * CELL) + half), LOGICAL_W - 2 + FIELD_L * CELL - half) : px + v.dx, GROUND_Y + v.dy);
+      v.root.zIndex = u.kind === 'base' ? 0 : GROUND_Y + v.dy;
+      if (u.kind !== 'base') drawHp(v.hp, u, v.w, v.h);
     }
     this.lastHp = hp;
     for (const [id, v] of this.views) if (!seen.has(id)) {
       if (v.anim) this.setAnim(v, 'death', false, DEATH_MS);
-      this.dying.push({ v, born: now }); this.views.delete(id);
+      this.dying.push({ v, born: now, deb: v.kind === 'base' ? this.debris(v) : undefined }); this.views.delete(id);
     }
     this.dying = this.dying.filter(d => {
+      if (d.deb) return this.collapse(d, now);
       const a = 1 - (now - d.born - (d.v.anim ? DEATH_MS : 0)) / FADE_MS;
       if (a <= 0) { d.v.root.destroy({ children: true }); return false; }
       d.v.root.alpha = Math.min(1, a);
@@ -127,9 +136,10 @@ export class BattleView {
 
     this.updateProjs(now, byId);
     this.updatePopups(now);
-    drawBig(this.bossRow, s, 'boss', 'Босс');
-    drawBig(this.baseRow, s, 'base', 'База');
-    this.floorLabel.text = `Этаж ${s.floor} · волна ${s.wave}/${WAVES}`;
+    drawBig(this.bossRow, s, 'enemy', 'boss', 8, 344, 'Босс', 0xdd4444);
+    drawBig(this.ownBaseRow, s, 'party', 'base', 8, 166, 'Наша база', 0x44bb55);
+    drawBig(this.baseRow, s, 'enemy', 'base', 186, 166, 'База врага', 0xdd4444);
+    this.floorLabel.text = `Этаж ${s.floor} · волна ${s.wave}`;
   }
 
   private async loadAtlases() {
@@ -170,7 +180,7 @@ export class BattleView {
         const data = await (await fetch(`${base}proto/${id}.json`)).json();
         const sheet = new Spritesheet(texture, data);
         await sheet.parse();
-        this.protos.set(id, { sheet, anchors: data.meta.anchors, charH: data.meta.charH });
+        this.protos.set(id, { sheet, anchors: data.meta.anchors, charH: data.meta.charH, projectile: data.meta.projectile });
       } catch (e) {
         console.warn(`прото-атлас ${id} не загружен`, e);
       }
@@ -178,6 +188,7 @@ export class BattleView {
   }
 
   private protoOf(u: Unit): Proto | undefined {
+    if (u.kind === 'base') return undefined; // базы - здания, не юниты EF
     return this.protos.get(u.kind === 'hero' || u.kind === 'creep' ? u.refId : `${u.race}_${u.refId}`);
   }
 
@@ -211,32 +222,31 @@ export class BattleView {
     const t = heals
       ? cands.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a))
       : cands.reduce((a, b) => (Math.abs(b.x - u.x) < Math.abs(a.x - u.x) ? b : a));
-    const arrow = !heals && (u.kind === 'creep' ? CREEP_TYPE.get(u.refId) === 'ranged' : HEROES.get(u.refId)?.role === 'ranger');
-    const g = new Graphics();
-    if (arrow) {
-      g.moveTo(-9, 0).lineTo(3, 0).stroke({ color: 0xd7ccc8, width: 1.5 });
-      g.poly([3, -2.5, 8, 0, 3, 2.5]).fill(0xeceff1);
-      g.poly([-9, 0, -11, -2, -7, 0, -11, 2]).fill(0xc0392b);
-    } else {
-      const c = heals ? 0x66ff88 : orbColor(u.race);
-      g.circle(0, 0, 6).fill({ color: c, alpha: 0.3 }).circle(0, 0, 3.2).fill(c).circle(-0.8, -0.8, 1.2).fill(0xffffff);
-    }
-    this.world.addChild(g);
+    const type = this.protoOf(u)?.projectile ?? (heals ? 'heal' : (u.kind === 'creep' ? CREEP_TYPE.get(u.refId) === 'ranged' : HEROES.get(u.refId)?.role === 'ranger') ? 'arrow' : 'orb');
+    const tv = this.views.get(t.id);
     const dir = t.x >= u.x ? 1 : -1;
-    const x0 = u.x * CELL + dir * 6, y0 = GROUND_Y - v.h * 0.6;
-    const x1 = t.x * CELL, y1 = GROUND_Y - (this.views.get(t.id)?.h ?? 20) * 0.55;
-    const dist = Math.hypot(x1 - x0, y1 - y0);
-    this.projs.push({ g, x0, y0, x1, y1, born: now, dur: Math.max(90, dist / (PROJ_SPEED * CELL) * 1000), arc: arrow ? 12 : 3, target: t, dmg: 0 });
+    const x0 = u.x * CELL + v.dx + dir * 6, y0 = GROUND_Y + v.dy - v.h * 0.6;
+    const x1 = t.x * CELL + (tv?.dx ?? 0), y1 = GROUND_Y + (tv?.dy ?? 0) - (tv?.h ?? 20) * 0.55;
+    const dist = Math.hypot(x1 - x0, y1 - y0), P = PROJ[type];
+    this.projs.push({ g: projGfx(type, u.race), x0, y0, x1, y1, born: now, dur: Math.max(70, dist / (P.speed * CELL) * 1000), arc: P.arc, target: t, tdx: tv?.dx ?? 0, dmg: 0 });
+    const pg = this.projs[this.projs.length - 1].g;
+    pg.zIndex = 1000; this.world.addChild(pg);
+    if (type === 'bullet') { // вспышка у ствола
+      const f = new Graphics().circle(0, 0, 4).fill({ color: 0xffe066, alpha: 0.9 }).circle(0, 0, 2).fill(0xffffff);
+      f.position.set(x0, y0); f.zIndex = 1000; this.world.addChild(f);
+      this.projs.push({ g: f, x0, y0, x1: x0, y1: y0, born: now, dur: 90, arc: 0, target: t, tdx: 0, dmg: 0, fx: true });
+    }
   }
 
   private updateProjs(now: number, byId: Map<number, Unit>) {
     this.projs = this.projs.filter(p => {
       const t = Math.min(1, (now - p.born) / p.dur);
-      if (byId.get(p.target.id)?.alive) p.x1 = p.target.x * CELL;
+      if (!p.fx && byId.get(p.target.id)?.alive) p.x1 = p.target.x * CELL + p.tdx;
+      if (p.fx) p.g.alpha = 1 - t;
       const at = (k: number) => [p.x0 + (p.x1 - p.x0) * k, p.y0 + (p.y1 - p.y0) * k - p.arc * Math.sin(Math.PI * k)];
       const [x, y] = at(t), [x2, y2] = at(Math.min(1, t + 0.03));
       p.g.position.set(x, y);
-      if (x2 !== x || y2 !== y) p.g.rotation = Math.atan2(y2 - y, x2 - x);
+      if (!p.fx && (x2 !== x || y2 !== y)) p.g.rotation = Math.atan2(y2 - y, x2 - x);
       if (t < 1) return true;
       if (p.dmg > 0 && p.pu) this.popupNow(p.pu, p.dmg, now);
       p.g.destroy();
@@ -308,10 +318,11 @@ export class BattleView {
     } else {
       try {
         tex = this.procOf(u);
-        ({ w, h } = { w: tex.w, h: tex.h });
+        const k = PROC_SCALE[u.kind];
+        ({ w, h } = { w: tex.w * k, h: tex.h * k });
         sprite = new Sprite(tex.tex);
         sprite.anchor.set(0.5, 1);
-        sprite.scale.x = u.side === 'party' ? 1 : -1;
+        sprite.scale.set(u.side === 'party' ? k : -k, k);
       } catch (e) { // крайний фоллбек: нет DOM-canvas и т.п.
         console.warn('процедурный спрайт не создан', e);
         sprite = new Sprite(Texture.WHITE);
@@ -321,20 +332,42 @@ export class BattleView {
       }
     }
     root.addChild(sprite);
+    const base = u.kind === 'base';
+    const dy = base ? 0 : ((u.id % ROWS) - 1) * 7, dx = base ? 0 : (((u.id * 5) % 7) - 3) * 1.2; // только визуально
     const hp = new Graphics();
     root.addChild(hp);
     this.world.addChild(root);
     const v: UnitView = {
-      root, hp, w, h, sprite, tex, lastX: u.x, lastCd: u.attackCooldown, lunge: -1e9, flash: 0, moving: 0,
+      root, hp, w, h, kind: u.kind, dx, dy, sprite, tex, lastX: u.x, lastCd: u.attackCooldown, lunge: -1e9, flash: 0, moving: 0,
       proto, anim, form, cur: `f${form}_idle`, action: '', actionUntil: 0, hurtAt: -1e9,
     };
     this.views.set(u.id, v);
     return v;
   }
 
+  private debris(v: UnitView) {
+    return Array.from({ length: 12 }, (_, i) => {
+      const g = new Graphics().rect(-2, -2, 4, 4).fill(i % 3 ? 0x6a6a7a : 0x3a3a48);
+      g.position.set(v.root.x + (Math.random() - 0.5) * v.w * 0.6, GROUND_Y - Math.random() * v.h * 0.6);
+      g.zIndex = 1000; this.world.addChild(g);
+      return { g, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 90 };
+    });
+  }
+
+  /** Разрушение базы: оседает в землю с вспышкой, летят обломки. */
+  private collapse(d: { v: UnitView; born: number; deb?: { g: Graphics; vx: number; vy: number }[] }, now: number): boolean {
+    const t = (now - d.born) / 900;
+    if (t >= 1) { d.v.root.destroy({ children: true }); d.deb!.forEach(e => e.g.destroy()); return false; }
+    d.v.root.scale.y = Math.max(0.05, 1 - t);
+    d.v.root.alpha = Math.min(1, 2 - 2 * t);
+    d.v.sprite.tint = t < 0.15 ? 0xffffff : 0x999999;
+    d.deb!.forEach(e => { e.vy += 5; e.g.x += e.vx / 60; e.g.y += e.vy / 60; e.g.alpha = 1 - t; });
+    return true;
+  }
+
   /** Урон от выстрела показываем в момент прилёта снаряда, остальной — сразу. */
   private popup(u: Unit, dmg: number, now: number) {
-    const p = this.projs.find(q => q.target.id === u.id && !q.pu);
+    const p = this.projs.find(q => q.target.id === u.id && !q.pu && !q.fx);
     if (p) { p.dmg = dmg; p.pu = u; return; }
     this.popupNow(u, dmg, now);
   }
@@ -342,13 +375,15 @@ export class BattleView {
   private popupNow(u: Unit, dmg: number, now: number) {
     const n = Math.round(dmg);
     if (n < 1) return;
-    const h = this.views.get(u.id)?.h ?? dims(u).h;
+    const pv = this.views.get(u.id);
+    const h = pv?.h ?? dims(u).h;
     const t = new Text({
       text: String(n),
       style: { fontFamily: 'monospace', fontSize: 12, fill: u.side === 'party' ? 0xff5555 : 0xffffff, stroke: { color: 0x000000, width: 2 } },
     });
     t.anchor.set(0.5, 1);
-    t.position.set(u.x * CELL, GROUND_Y - h - 10);
+    t.zIndex = 1000;
+    t.position.set(u.x * CELL + (pv?.dx ?? 0), GROUND_Y + (pv?.dy ?? 0) - h - 10);
     this.world.addChild(t);
     this.popups.push({ t, born: now, y0: t.y });
   }
@@ -372,20 +407,40 @@ function makeRow(): Row {
   return { c, g, t };
 }
 
-function drawBig(row: Row, s: BattleState, kind: 'boss' | 'base', label: string) {
-  const u = s.units.find(x => x.alive && x.side === 'enemy' && x.kind === kind);
+function drawBig(row: Row, s: BattleState, side: Unit['side'], kind: 'boss' | 'base', x: number, w: number, label: string, color: number) {
+  const u = s.units.find(q => q.alive && q.side === side && q.kind === kind);
   row.c.visible = !!u;
   if (!u) return;
   const r = Math.max(0, u.hp / u.maxHp);
-  row.g.clear().rect(8, 12, 344, 5).fill(0x222222).rect(8, 12, 344 * r, 5).fill(0xdd4444);
+  row.g.clear().rect(x, 12, w, 5).fill(0x222222).rect(x, 12, w * r, 5).fill(color);
   row.t.text = `${label} ${Math.ceil(r * 100)}%`;
+  row.t.x = x;
 }
 
 function dims(u: Unit): { w: number; h: number } {
   if (u.kind === 'base') return { w: 40, h: 60 };
   if (u.kind === 'boss') return { w: 28, h: 40 };
   if (u.kind === 'hero') return { w: 16, h: 28 };
-  return { w: 10, h: 18 };
+  if (u.kind === 'mob') return { w: 11, h: 20 };
+  return { w: 9, h: 16 };
+}
+
+/** Снаряд по типу оружия; рисуется в сторону +x, поворот задаёт updateProjs. */
+function projGfx(type: ProjType, race: Unit['race']): Graphics {
+  const g = new Graphics();
+  if (type === 'arrow') {
+    g.moveTo(-9, 0).lineTo(3, 0).stroke({ color: 0xd7ccc8, width: 1.5 });
+    g.poly([3, -2.5, 8, 0, 3, 2.5]).fill(0xeceff1);
+    g.poly([-9, 0, -11, -2, -7, 0, -11, 2]).fill(0xc0392b);
+  } else if (type === 'bullet') {
+    g.rect(-9, -1, 8, 2).fill({ color: 0xffd54f, alpha: 0.55 }).rect(-3, -1, 5, 2).fill(0xffe066).rect(1, -1, 2, 2).fill(0xffffff);
+  } else if (type === 'cannon') {
+    g.circle(0, 0, 4).fill(0x2b2b33).circle(-1, -1.2, 1.4).fill(0x8a8a99);
+  } else {
+    const c = type === 'heal' ? 0x66ff88 : orbColor(race);
+    g.circle(0, 0, type === 'heal' ? 5 : 6).fill({ color: c, alpha: 0.3 }).circle(0, 0, 3.2).fill(c).circle(-0.8, -0.8, 1.2).fill(0xffffff);
+  }
+  return g;
 }
 
 function drawHp(g: Graphics, u: Unit, w: number, h: number) {
