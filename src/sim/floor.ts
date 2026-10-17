@@ -12,7 +12,12 @@ const F = economy.floor;
 export function isBossFloor(n: number) { return n % F.bossEvery === 0; }
 export function isRaidBossFloor(n: number) { return n % F.raidBossEvery === 0; }
 
-/** Мобы волны w (1-based) этажа n. Последняя волна — босс или база. */
+/** Вражеская база этажа n: стоит в x всё время боя, бить её можно после последней волны. */
+export function spawnBase(n: number, x: number): Unit {
+  return makeUnit('base', mobRaceForFloor(n), 'enemy_base', x, baseHp(n), 0, 0, 0);
+}
+
+/** Мобы волны w (1-based) этажа n, выходят из базы в startX. В последней волне — босс на боссовых этажах. */
 export function spawnWave(n: number, w: number, startX: number): Unit[] {
   const race = mobRaceForFloor(n);
   const hp = mobHp(n);
@@ -20,15 +25,13 @@ export function spawnWave(n: number, w: number, startX: number): Unit[] {
   const units: Unit[] = [];
   const isLast = w === F.wavesPerFloor;
   if (isLast) {
-    // вражеская база всегда в конце
-    units.push(makeUnit('base', race, 'enemy_base', startX + 4, baseHp(n), 0, 0, 0));
-    if (isRaidBossFloor(n)) units.push(makeUnit('boss', race, 'raid_boss', startX + 2, hp * F.raidBossHpMult, atk * 3, 1.0, 2));
-    else if (isBossFloor(n)) units.push(makeUnit('boss', race, 'boss', startX + 2, hp * F.bossHpMult, atk * 2, 1.0, 1.5));
+    if (isRaidBossFloor(n)) units.push(makeUnit('boss', race, 'raid_boss', startX + 0.5, hp * F.raidBossHpMult, atk * 3, 1.0, 2));
+    else if (isBossFloor(n)) units.push(makeUnit('boss', race, 'boss', startX + 0.5, hp * F.bossHpMult, atk * 2, 1.0, 1.5));
   }
   const count = isLast ? Math.ceil(F.mobsPerWave / 2) : F.mobsPerWave;
   for (let i = 0; i < count; i++) {
     const ranged = i % 3 === 2;
-    units.push(makeUnit('mob', race, ranged ? 'mob_ranged' : 'mob_melee', startX + i * 0.6, hp * (ranged ? 0.6 : 1), atk, 1.0, ranged ? 5 : 1));
+    units.push(makeUnit('mob', race, ranged ? 'mob_ranged' : 'mob_melee', startX - i * 0.6, hp * (ranged ? 0.6 : 1), atk, 1.0, ranged ? 5 : 1));
   }
   return units;
 }
@@ -44,7 +47,7 @@ export function makeUnit(kind: Unit['kind'], race: Unit['race'], refId: string, 
 
 /** Суммарное HP всех врагов этажа — для оценки времени оффлайна. */
 export function totalFloorHp(n: number): number {
-  let total = 0;
+  let total = baseHp(n);
   for (let w = 1; w <= F.wavesPerFloor; w++) for (const u of spawnWave(n, w, 0)) total += u.maxHp;
   return total;
 }

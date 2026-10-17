@@ -84,6 +84,7 @@ export interface BattleState {
   zones?: Zone[];
   goldMult?: number;
   waveGen?: WaveGen;
+  baseOpen?: boolean;      // база бьётся только после последней волны
 }
 
 /** pet: 0 = петомца нет, >=1 — его уровень. floorsInParty — этажей пройдено с героем в отряде (для пробуждения). */

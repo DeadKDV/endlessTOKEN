@@ -1,7 +1,7 @@
 /** Тик боя. Детерминирован: одинаковые входы + seed → одинаковый исход (нужно для сервера). Способности — в abilities.ts. */
 import economy from '../data/economy.json';
 import { mulberry32 } from './rng';
-import { spawnWave, newId, resetIds } from './floor';
+import { spawnWave, spawnBase, newId, resetIds } from './floor';
 import { floorGold } from './economy';
 import { applyAbilities, initAbilities, pickTarget, basicAttack, atkSpeedOf, rangeOf, moveSpeedOf, isStunned } from './abilities';
 import type { BattleState, Unit, Race, Stats, CreepType, Ability, WaveGen } from './types';
@@ -10,6 +10,10 @@ const DT = economy.tickMs / 1000;
 const WAVES = economy.floor.wavesPerFloor;
 const PARTY_START_X = 0;
 const ENEMY_START_X = 10;
+/** Где стоит вражеская база (клетки). Рендер прижимает её к правому краю экрана. */
+export const BASE_X = 14;
+/** Откуда выходят волны обычного этажа - от базы. */
+const WAVE_X = BASE_X - 1;
 
 export interface PartyMember {
   heroId: string; race: Race; stats: Stats;
@@ -33,7 +37,8 @@ export function createBattle(floor: number, party: PartyMember[], seed: number, 
     });
   });
   const s: BattleState = { floor, wave: 1, tick: 0, units, seed, rngState: seed, goldEarned: 0, finished: null, waveGen };
-  s.units.push(...(waveGen ? waveGen(1, ENEMY_START_X) : spawnWave(floor, 1, ENEMY_START_X)));
+  if (waveGen) s.units.push(...waveGen(1, ENEMY_START_X));
+  else s.units.push(spawnBase(floor, BASE_X), ...spawnWave(floor, 1, WAVE_X));
   initAbilities(s);
   return s;
 }
@@ -49,19 +54,28 @@ export function step(s: BattleState): BattleState {
   const party = s.units.filter(u => u.alive && u.side === 'party');
   const enemy = s.units.filter(u => u.alive && u.side === 'enemy');
   if (party.length === 0) { s.finished = 'lose'; return s; }
-  if (enemy.length === 0) {
-    if (!s.waveGen && s.wave >= WAVES) { s.finished = 'win'; s.goldEarned += floorGold(s.floor) * 0.4 * (s.goldMult ?? 1); return s; }
-    s.wave++;
-    const frontX = Math.max(...party.map(u => u.x));
-    s.units.push(...(s.waveGen ? s.waveGen(s.wave, frontX + ENEMY_START_X) : spawnWave(s.floor, s.wave, frontX + ENEMY_START_X)));
-    s.tick++;
+  const waveLeft = enemy.some(u => u.kind !== 'base');
+  if (enemy.length === 0 && !s.waveGen && s.wave >= WAVES) {
+    s.goldEarned += floorGold(s.floor) * 0.4 * (s.goldMult ?? 1);
+    s.finished = 'win';
     return s;
+  }
+  if (!waveLeft) {
+    if (s.waveGen || s.wave < WAVES) {
+      s.wave++;
+      if (s.waveGen) s.units.push(...s.waveGen(s.wave, Math.max(...party.map(u => u.x)) + ENEMY_START_X));
+      else s.units.push(...spawnWave(s.floor, s.wave, WAVE_X));
+      s.tick++;
+      return s;
+    }
+    // волны выбиты - база открыта
+    s.baseOpen = true;
   }
   applyAbilities(s, rnd);
   for (const u of s.units) {
     if (!u.alive) continue;
     if (isStunned(u, s.tick)) { u.attackCooldown -= DT; continue; }
-    const foes = u.side === 'party' ? enemy : party;
+    const foes = u.side === 'party' ? (s.baseOpen ? enemy : enemy.filter(e => e.kind !== 'base')) : party;
     const target = pickTarget(s, u, foes);
     if (!target) { u.attackCooldown -= DT; continue; }
     const dist = Math.abs(target.x - u.x);

@@ -113,6 +113,7 @@ export function dealDamage(s: BattleState, src: Unit | undefined, tgt: Unit, raw
   const t = s.tick;
   if (!tgt.alive || raw <= 0) return 0;
   if (fxHas(tgt, 'invuln', t)) return 0;
+  if (tgt.kind === 'base' && !s.baseOpen) return 0;
   if (src && src.stats.range <= 1.5 && fxHas(tgt, 'airborne', t)) return 0;
   if (fxHas(tgt, 'dodge', t)) { const p = fxMul(tgt, 'dodge', t); if (p >= 1 || rnd() < p) return 0; }
   let dmg = raw * fxMul(tgt, 'dmgTaken', t);
@@ -295,7 +296,7 @@ function passive(s: BattleState, u: Unit, a: Ability) {
 function cast(s: BattleState, u: Unit, a: Ability, rnd: () => number): boolean {
   const t = s.tick;
   const mine = s.units.filter(x => x.alive && x.side === u.side);
-  const foes = s.units.filter(x => x.alive && x.side !== u.side)
+  const foes = s.units.filter(x => x.alive && x.side !== u.side && (x.kind !== 'base' || s.baseOpen))
     .sort((p, q) => dist(u, p) - dist(u, q) || p.id - q.id);
   const near = foes[0] as Unit; // для NO_ENEMY_NEEDED может быть undefined, но там не используется
   if (!NO_ENEMY_NEEDED.has(a.kind) && !(foes.length && dist(u, near) <= CAST_REACH)) return false;
