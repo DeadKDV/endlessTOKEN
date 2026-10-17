@@ -13,6 +13,7 @@ import { save } from '../game';
 import { procSprite, type ProcTex } from './procSprites';
 import { Backdrop } from './backdrop';
 import { artIndex } from './artSet';
+import { BattleFx } from './fx';
 import races from '../data/races.json';
 import creeps from '../data/creeps.json';
 
@@ -54,9 +55,10 @@ interface UnitView {
   lastX: number; lastCd: number; lunge: number; flash: number; moving: number;
   proto?: Proto; anim?: AnimatedSprite; form: number; cur: string; action: string; actionUntil: number; hurtAt: number;
 }
+type PopKind = 'dmg' | 'crit' | 'heal' | 'base';
 interface Proj {
   g: Graphics; x0: number; y0: number; x1: number; y1: number; born: number; dur: number; arc: number;
-  target: Unit; tdx: number; dmg: number; pu?: Unit; fx?: boolean;
+  target: Unit; tdx: number; dmg: number; pu?: Unit; fx?: boolean; pk?: PopKind;
 }
 interface Popup { t: Text; born: number; y0: number }
 interface Row { c: Container; g: Graphics; t: Text }
@@ -68,6 +70,9 @@ export class BattleView {
   private dying: { v: UnitView; born: number; deb?: { g: Graphics; vx: number; vy: number }[] }[] = [];
   private backdrop = new Backdrop(GROUND_Y, LOGICAL_H);
   private lastHp = new Map<number, number>();
+  private ema = new Map<number, number>(); // средний удар по цели: заметно больший считаем критом
+  private lastHeal = new Map<number, number>();
+  private fx!: BattleFx;
   private sheets = new Map<string, Spritesheet>();
   private protos = new Map<string, Proto>();
   private projs: Proj[] = [];
@@ -88,6 +93,12 @@ export class BattleView {
     this.floorLabel.position.set(8, GROUND_Y + 4);
     this.world.x = -FIELD_L * CELL;
     this.world.sortableChildren = true;
+    this.fx = new BattleFx(this.app.stage, this.app.renderer, id => {
+      const v = this.views.get(id);
+      return v && { x: v.root.x, y: v.root.y, h: v.h, w: v.w };
+    }, { x: 14 - this.world.x, y: 12 }, LOGICAL_W, LOGICAL_H, CELL);
+    this.fx.layer.zIndex = 2000;
+    this.world.addChild(this.fx.layer);
     this.app.stage.addChild(this.backdrop, this.world, this.bossRow.c, this.baseRow.c, this.ownBaseRow.c, this.floorLabel);
     await this.loadAtlases();
     await this.loadProtos();
@@ -109,6 +120,11 @@ export class BattleView {
     for (const u of s.units) {
       const prev = this.lastHp.get(u.id);
       if (prev !== undefined && u.hp < prev) this.popup(u, prev - u.hp, now);
+      else if (prev !== undefined && u.hp - prev >= 1 && u.alive && u.kind !== 'base' && now - (this.lastHeal.get(u.id) ?? 0) > 300) {
+        this.lastHeal.set(u.id, now);
+        const hv = this.views.get(u.id);
+        if (hv) { this.popupNow(u, u.hp - prev, now, 'heal'); this.fx.heal(hv.root.x, hv.root.y - hv.h * 0.6); }
+      }
       hp.set(u.id, u.hp);
       if (!u.alive || u.pending) continue;
       seen.add(u.id);
@@ -124,6 +140,11 @@ export class BattleView {
     }
     this.lastHp = hp;
     for (const [id, v] of this.views) if (!seen.has(id)) {
+      const du = byId.get(id);
+      if (du && !du.alive && du.side === 'enemy' && !du.temp) {
+        if (du.kind === 'base') this.fx.shake(8, 600, now);
+        else this.fx.coins(v.root.x, v.root.y - v.h * 0.4, du.kind === 'boss' ? 8 : 2);
+      }
       if (v.anim) this.setAnim(v, 'death', false, DEATH_MS);
       this.dying.push({ v, born: now, deb: v.kind === 'base' ? this.debris(v) : undefined }); this.views.delete(id);
     }
@@ -135,6 +156,7 @@ export class BattleView {
       return true;
     });
 
+    this.fx.update(s, now, (u, i) => u.kind === 'hero' && i === 2 && get(save).heroes[u.refId]?.form === 2);
     this.updateProjs(now, byId);
     this.updatePopups(now);
     drawBig(this.bossRow, s, 'enemy', 'boss', 8, 344, 'Босс', 0xdd4444);
@@ -243,7 +265,7 @@ export class BattleView {
       p.g.position.set(x, y);
       if (!p.fx && (x2 !== x || y2 !== y)) p.g.rotation = Math.atan2(y2 - y, x2 - x);
       if (t < 1) return true;
-      if (p.dmg > 0 && p.pu) this.popupNow(p.pu, p.dmg, now);
+      if (p.dmg > 0 && p.pu) this.popupNow(p.pu, p.dmg, now, p.pk);
       p.g.destroy();
       return false;
     });
@@ -362,19 +384,27 @@ export class BattleView {
 
   /** Урон от выстрела показываем в момент прилёта снаряда, остальной — сразу. */
   private popup(u: Unit, dmg: number, now: number) {
+    const avg = this.ema.get(u.id);
+    const crit = avg !== undefined && dmg > avg * 1.6;
+    this.ema.set(u.id, avg === undefined ? dmg : avg * 0.8 + Math.min(dmg, avg * 1.3) * 0.2);
+    const pk: PopKind = u.kind === 'base' ? 'base' : crit ? 'crit' : 'dmg';
     const p = this.projs.find(q => q.target.id === u.id && !q.pu && !q.fx);
-    if (p) { p.dmg = dmg; p.pu = u; return; }
-    this.popupNow(u, dmg, now);
+    if (p) { p.dmg = dmg; p.pu = u; p.pk = pk; return; }
+    this.popupNow(u, dmg, now, pk);
   }
 
-  private popupNow(u: Unit, dmg: number, now: number) {
+  private popupNow(u: Unit, dmg: number, now: number, kind: PopKind = 'dmg') {
     const n = Math.round(dmg);
     if (n < 1) return;
     const pv = this.views.get(u.id);
     const h = pv?.h ?? dims(u).h;
     const t = new Text({
-      text: String(n),
-      style: { fontFamily: 'monospace', fontSize: 12, fill: u.side === 'party' ? 0xff5555 : 0xffffff, stroke: { color: 0x000000, width: 2 } },
+      text: kind === 'heal' ? `+${n}` : kind === 'crit' ? `${n}!` : kind === 'base' ? `-${n}` : String(n),
+      style: {
+        fontFamily: 'monospace', fontWeight: kind === 'dmg' ? 'normal' : 'bold', stroke: { color: 0x000000, width: kind === 'crit' ? 3 : 2 },
+        fontSize: kind === 'crit' ? 18 : kind === 'base' ? 15 : 12,
+        fill: kind === 'heal' ? 0x66ff88 : kind === 'crit' ? 0xffc83a : kind === 'base' ? 0xff9933 : u.side === 'party' ? 0xff5555 : 0xffffff,
+      },
     });
     t.anchor.set(0.5, 1);
     t.zIndex = 1000;
