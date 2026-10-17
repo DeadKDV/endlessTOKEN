@@ -1,0 +1,92 @@
+[
+  {
+    "id": "grakh", "race": "orc", "role": "tank",
+    "name": { "ru": "Гракх, Вождь-громила", "en": "Grakh, Brute Chieftain" },
+    "base": { "hp": 400, "atk": 20, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 1 },
+    "forms": [
+      { "name": { "ru": "Вождь-громила", "en": "Brute Chieftain" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "roar", "name": { "ru": "Рёв", "en": "Roar" }, "kind": "debuff_enemies", "stat": "atk", "value": 0.7, "duration": 5, "cooldown": 18 }],
+        "visual": "Огромный орк с дверью вместо щита, дубина, боевая раскраска", "sprite": "assets/sprites/orc/grakh_0.png" },
+      { "name": { "ru": "Трофейный вождь", "en": "Trophy Chieftain" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "unbreakable", "name": { "ru": "Непробиваемый", "en": "Unbreakable" }, "kind": "min_hp", "value": 1, "duration": 5, "cooldown": 30 }],
+        "visual": "Щит из панциря зверя, шипы на плечах, трофейные черепа", "sprite": "assets/sprites/orc/grakh_1.png" },
+      { "name": { "ru": "Всадник варга", "en": "Warg Rider" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "horde_charge", "name": { "ru": "Натиск орды", "en": "Horde Charge" }, "kind": "buff_creeps", "stat": "atk_and_speed", "value": 2, "duration": 6, "cooldown": 30 }],
+        "visual": "Гракх верхом на боевом варге", "sprite": "assets/sprites/orc/grakh_2.png" }
+    ],
+    "pet": { "id": "warg", "name": { "ru": "Боевой варг", "en": "War Warg" }, "visual": "Серый варг в шипастой сбруе",
+      "passive": { "id": "warg_p", "name": { "ru": "Стая", "en": "Pack" }, "kind": "buff_creeps", "stat": "atk", "value": 1.1, "cooldown": 0 } }
+  },
+  {
+    "id": "zurga", "race": "orc", "role": "fighter",
+    "name": { "ru": "Зурга, Топорщица", "en": "Zurga, Axewoman" },
+    "base": { "hp": 220, "atk": 35, "atkSpeed": 1.2, "crit": 0.1, "critDmg": 1.6, "range": 1 },
+    "forms": [
+      { "name": { "ru": "Топорщица", "en": "Axewoman" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "blood_circle", "name": { "ru": "Кровавый круг", "en": "Blood Circle" }, "kind": "damage_aoe", "value": 1.5, "radius": 1.5, "selfHeal": 0.2, "cooldown": 10 }],
+        "visual": "Орчиха с двумя топорами, ирокез, шрамы", "sprite": "assets/sprites/orc/zurga_0.png" },
+      { "name": { "ru": "Цепная ярость", "en": "Chained Fury" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "bloodlust", "name": { "ru": "Жажда крови", "en": "Bloodlust" }, "kind": "buff_self_conditional", "stat": "atkSpeed", "value": 2, "hpThreshold": 0.5, "cooldown": 0 }],
+        "visual": "Топоры с цепями, доспех из костей, красные глаза", "sprite": "assets/sprites/orc/zurga_1.png" },
+      { "name": { "ru": "Мясничиха", "en": "Butcher" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "carve", "name": { "ru": "Разделать", "en": "Carve" }, "kind": "reset_on_kill", "cooldown": 0 }],
+        "visual": "Кабан-секач бежит впереди", "sprite": "assets/sprites/orc/zurga_2.png" }
+    ],
+    "pet": { "id": "boar", "name": { "ru": "Кабан-секач", "en": "Tusker Boar" }, "visual": "Чёрный кабан с красными бивнями",
+      "passive": { "id": "boar_p", "name": { "ru": "Бивни", "en": "Tusks" }, "kind": "buff_self", "stat": "atk", "value": 1.1, "cooldown": 0 } }
+  },
+  {
+    "id": "kreg", "race": "orc", "role": "ranger",
+    "name": { "ru": "Крэг, Метатель копий", "en": "Kreg, Spear Thrower" },
+    "base": { "hp": 160, "atk": 30, "atkSpeed": 1.1, "crit": 0.15, "critDmg": 1.8, "range": 6 },
+    "forms": [
+      { "name": { "ru": "Метатель копий", "en": "Spear Thrower" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "impale", "name": { "ru": "Пронзить", "en": "Impale" }, "kind": "damage_line", "value": 2, "cooldown": 9 }],
+        "visual": "Связка дротиков за спиной, набедренная повязка, ожерелье из клыков", "sprite": "assets/sprites/orc/kreg_0.png" },
+      { "name": { "ru": "Шипастый", "en": "Barbed" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "pin", "name": { "ru": "Пришпилить", "en": "Pin" }, "kind": "root", "targets": 1, "duration": 4, "cooldown": 12 }],
+        "visual": "Копья с шипами, наруч с крюком, на лице глина", "sprite": "assets/sprites/orc/kreg_1.png" },
+      { "name": { "ru": "Стервятник", "en": "Vulture" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "carrion", "name": { "ru": "Падаль", "en": "Carrion" }, "kind": "execute", "value": 4, "hpThreshold": 0.5, "cooldown": 0 }],
+        "visual": "Стервятник сидит на копье", "sprite": "assets/sprites/orc/kreg_2.png" }
+    ],
+    "pet": { "id": "vulture", "name": { "ru": "Стервятник", "en": "Vulture" }, "visual": "Облезлый стервятник с красной шеей",
+      "passive": { "id": "vulture_p", "name": { "ru": "Падальщик", "en": "Scavenger" }, "kind": "buff_self", "stat": "critDmg", "value": 1.2, "cooldown": 0 } }
+  },
+  {
+    "id": "morgul", "race": "orc", "role": "mage",
+    "name": { "ru": "Моргул, Шаман крови", "en": "Morgul, Blood Shaman" },
+    "base": { "hp": 150, "atk": 40, "atkSpeed": 0.8, "crit": 0.05, "critDmg": 1.5, "range": 5 },
+    "forms": [
+      { "name": { "ru": "Шаман крови", "en": "Blood Shaman" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "fire_totem", "name": { "ru": "Огненный тотем", "en": "Fire Totem" }, "kind": "zone_damage", "value": 0.8, "radius": 2, "duration": 5, "cooldown": 12 }],
+        "visual": "Маска из черепа, тотем-посох, горшок с углями", "sprite": "assets/sprites/orc/morgul_0.png" },
+      { "name": { "ru": "Рогатый шаман", "en": "Horned Shaman" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "earthquake", "name": { "ru": "Землетрясение", "en": "Earthquake" }, "kind": "stun_all", "duration": 2, "cooldown": 20 }],
+        "visual": "Маска с рогами, тотемов два, тело в красных рунах", "sprite": "assets/sprites/orc/morgul_1.png" },
+      { "name": { "ru": "Голос предков", "en": "Ancestor's Voice" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "blood_ritual", "name": { "ru": "Кровавый ритуал", "en": "Blood Ritual" }, "kind": "sacrifice_buff", "cost": 0.3, "value": 4, "duration": 8, "cooldown": 40 }],
+        "visual": "Красный призрак орка-предка за спиной", "sprite": "assets/sprites/orc/morgul_2.png" }
+    ],
+    "pet": { "id": "ancestor_spirit", "name": { "ru": "Дух предка", "en": "Ancestor Spirit" }, "visual": "Полупрозрачный красный орк с копьём",
+      "passive": { "id": "ancestor_spirit_p", "name": { "ru": "Наследие", "en": "Legacy" }, "kind": "buff_self", "stat": "atk", "value": 1.1, "cooldown": 0 } }
+  },
+  {
+    "id": "urgash", "race": "orc", "role": "support",
+    "name": { "ru": "Ургаш, Старый шаман", "en": "Urgash, Old Shaman" },
+    "base": { "hp": 200, "atk": 15, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 4 },
+    "forms": [
+      { "name": { "ru": "Старый шаман", "en": "Old Shaman" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "healing_rain", "name": { "ru": "Исцеляющий дождь", "en": "Healing Rain" }, "kind": "heal_party", "value": 0.15, "cooldown": 10 }],
+        "visual": "Сгорбленный орк с посохом-погремушкой, перья, сумка с травами", "sprite": "assets/sprites/orc/urgash_0.png" },
+      { "name": { "ru": "Пернатый шаман", "en": "Feathered Shaman" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "totem_of_rage", "name": { "ru": "Тотем ярости", "en": "Totem of Rage" }, "kind": "buff_party", "stat": "atk", "value": 1.35, "duration": 8, "cooldown": 22 }],
+        "visual": "Головной убор из перьев, посох с черепом, плащ из шкур", "sprite": "assets/sprites/orc/urgash_1.png" },
+      { "name": { "ru": "Говорящий с волками", "en": "Wolfspeaker" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "howl", "name": { "ru": "Вой", "en": "Howl" }, "kind": "ghost_creeps", "value": 2, "duration": 10, "cooldown": 35 }],
+        "visual": "Волк-дух, полупрозрачный, воет", "sprite": "assets/sprites/orc/urgash_2.png" }
+    ],
+    "pet": { "id": "spirit_wolf", "name": { "ru": "Волк-дух", "en": "Spirit Wolf" }, "visual": "Полупрозрачный волк в красном свечении",
+      "passive": { "id": "spirit_wolf_p", "name": { "ru": "Вожак", "en": "Alpha" }, "kind": "buff_creeps", "stat": "atkSpeed", "value": 1.1, "cooldown": 0 } }
+  }
+]

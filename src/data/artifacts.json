@@ -1,0 +1,32 @@
+{
+  "price": 100,
+  "upgradeGrowth": 1.5,
+  "maxLevel": 50,
+  "slotsAtHeroLevel": [50, 100, 150],
+  "artifacts": [
+    { "id": "skull_lich",     "branch": "crypt", "resource": "bone", "name": { "ru": "Череп лича", "en": "Lich Skull" },                "effect": { "kind": "hero_atk",   "atLevel1": 0.10, "atLevel50": 5.0 } },
+    { "id": "bone_knuckles",  "branch": "crypt", "resource": "bone", "name": { "ru": "Костяной кастет", "en": "Bone Knuckles" },        "effect": { "kind": "infantry_atk", "atLevel1": 0.08, "atLevel50": 4.0 } },
+    { "id": "femur_arrow",    "branch": "crypt", "resource": "bone", "name": { "ru": "Стрела из бедренной кости", "en": "Femur Arrow" }, "effect": { "kind": "ranged_atk", "atLevel1": 0.08, "atLevel50": 4.0 } },
+    { "id": "dead_king_heart","branch": "crypt", "resource": "bone", "name": { "ru": "Сердце мёртвого короля", "en": "Dead King's Heart" }, "effect": { "kind": "party_atk_on_creep_death", "mult": 1.5, "duration": 5, "cooldownAtLevel1": 30, "cooldownAtLevel50": 10 } },
+
+    { "id": "moon_quiver",    "branch": "grove", "resource": "leaf", "name": { "ru": "Лунный колчан", "en": "Moon Quiver" },           "effect": { "kind": "hero_atk_speed", "atLevel1": 0.05, "atLevel50": 1.5 } },
+    { "id": "leaf_blade",     "branch": "grove", "resource": "leaf", "name": { "ru": "Листовой клинок", "en": "Leaf Blade" },          "effect": { "kind": "infantry_atk_speed", "atLevel1": 0.05, "atLevel50": 1.2 } },
+    { "id": "silver_sight",   "branch": "grove", "resource": "leaf", "name": { "ru": "Серебряный прицел", "en": "Silver Sight" },      "effect": { "kind": "ranged_crit", "atLevel1": 0.02, "atLevel50": 0.5 } },
+    { "id": "ancient_acorn",  "branch": "grove", "resource": "leaf", "name": { "ru": "Древний жёлудь", "en": "Ancient Acorn" },        "effect": { "kind": "crit_dmg", "atLevel1": 0.1, "atLevel50": 3.0 } },
+
+    { "id": "star_plate",     "branch": "mine", "resource": "ore", "name": { "ru": "Звёздная пластина", "en": "Star Plate" },          "effect": { "kind": "hero_hp", "atLevel1": 0.10, "atLevel50": 5.0 } },
+    { "id": "ore_shield",     "branch": "mine", "resource": "ore", "name": { "ru": "Рудный щит", "en": "Ore Shield" },                 "effect": { "kind": "infantry_hp", "atLevel1": 0.08, "atLevel50": 4.0 } },
+    { "id": "healing_gem",    "branch": "mine", "resource": "ore", "name": { "ru": "Целебный самоцвет", "en": "Healing Gem" },         "effect": { "kind": "healer_power", "atLevel1": 0.08, "atLevel50": 4.0 } },
+    { "id": "deep_anchor",    "branch": "mine", "resource": "ore", "name": { "ru": "Глубинный якорь", "en": "Deep Anchor" },           "effect": { "kind": "damage_reduction", "atLevel1": 0.02, "atLevel50": 0.4 } },
+
+    { "id": "royal_seal",     "branch": "citadel", "resource": "seal", "name": { "ru": "Королевская печать", "en": "Royal Seal" },     "effect": { "kind": "gold_mult", "atLevel1": 0.10, "atLevel50": 5.0 } },
+    { "id": "tax_ledger",     "branch": "citadel", "resource": "seal", "name": { "ru": "Налоговая книга", "en": "Tax Ledger" },        "effect": { "kind": "floor_points_mult", "atLevel1": 0.05, "atLevel50": 1.5 } },
+    { "id": "hourglass",      "branch": "citadel", "resource": "seal", "name": { "ru": "Песочные часы", "en": "Hourglass" },            "effect": { "kind": "offline_rate", "atLevel1": 0.05, "atLevel50": 1.0 } },
+    { "id": "crown_shard",    "branch": "citadel", "resource": "seal", "name": { "ru": "Осколок короны", "en": "Crown Shard" },        "effect": { "kind": "crystal_mult", "atLevel1": 0.02, "atLevel50": 0.5 } },
+
+    { "id": "war_drum",       "branch": "arena", "resource": "totem", "name": { "ru": "Боевой барабан", "en": "War Drum" },            "effect": { "kind": "creep_cap_add", "atLevel1": 1, "atLevel50": 10 } },
+    { "id": "blood_collar",   "branch": "arena", "resource": "totem", "name": { "ru": "Кровавый ошейник", "en": "Blood Collar" },     "effect": { "kind": "pet_stat_mult", "atLevel1": 0.05, "atLevel50": 2.0 } },
+    { "id": "tusk_necklace",  "branch": "arena", "resource": "totem", "name": { "ru": "Ожерелье из бивней", "en": "Tusk Necklace" },  "effect": { "kind": "creep_all_stats", "atLevel1": 0.05, "atLevel50": 2.5 } },
+    { "id": "spirit_totem",   "branch": "arena", "resource": "totem", "name": { "ru": "Тотем духов", "en": "Spirit Totem" },           "effect": { "kind": "pet_ability_cooldown", "atLevel1": 0.98, "atLevel50": 0.5 } }
+  ]
+}

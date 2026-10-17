@@ -1,0 +1,92 @@
+[
+  {
+    "id": "taeron", "race": "elf", "role": "tank",
+    "name": { "ru": "Таэрон, Страж древ", "en": "Taeron, Treewarden" },
+    "base": { "hp": 400, "atk": 20, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 1 },
+    "forms": [
+      { "name": { "ru": "Страж древ", "en": "Treewarden" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "roots", "name": { "ru": "Корни", "en": "Roots" }, "kind": "root", "targets": 3, "duration": 3, "cooldown": 14 }],
+        "visual": "Высокий эльф в деревянном доспехе-коре, большой щит в форме листа, копьё", "sprite": "assets/sprites/elf/taeron_0.png" },
+      { "name": { "ru": "Проросший страж", "en": "Rooted Warden" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "thorn_skin", "name": { "ru": "Шипастая кожа", "en": "Thorn Skin" }, "kind": "reflect", "value": 0.3, "cooldown": 0 }],
+        "visual": "Кора проросла ветвями, щит из живого дерева, на плечах мох", "sprite": "assets/sprites/elf/taeron_1.png" },
+      { "name": { "ru": "Сердце леса", "en": "Heart of the Forest" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "forest_awakening", "name": { "ru": "Пробуждение леса", "en": "Forest Awakening" }, "kind": "damage_screen", "value": 2, "cooldown": 25 }],
+        "visual": "Рядом идёт энт-саженец ростом с Таэрона", "sprite": "assets/sprites/elf/taeron_2.png" }
+    ],
+    "pet": { "id": "ent_sapling", "name": { "ru": "Энт-саженец", "en": "Ent Sapling" }, "visual": "Деревце с лицом и ножками-корнями",
+      "passive": { "id": "ent_sapling_p", "name": { "ru": "Кора", "en": "Bark" }, "kind": "buff_party", "stat": "hp", "value": 1.1, "cooldown": 0 } }
+  },
+  {
+    "id": "lirel", "race": "elf", "role": "fighter",
+    "name": { "ru": "Лирэль, Танцующая с клинками", "en": "Lirel, Bladedancer" },
+    "base": { "hp": 220, "atk": 35, "atkSpeed": 1.2, "crit": 0.1, "critDmg": 1.6, "range": 1 },
+    "forms": [
+      { "name": { "ru": "Танцующая с клинками", "en": "Bladedancer" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "whirlwind", "name": { "ru": "Вихрь", "en": "Whirlwind" }, "kind": "damage_aoe", "value": 0.8, "hits": 6, "radius": 1.5, "cooldown": 10 }],
+        "visual": "Два изогнутых клинка, лёгкая кожа, волосы в хвост", "sprite": "assets/sprites/elf/lirel_0.png" },
+      { "name": { "ru": "Лунный клинок", "en": "Moonblade" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "shadow_step", "name": { "ru": "Шаг тени", "en": "Shadow Step" }, "kind": "teleport_backline", "value": 2, "cooldown": 15 }],
+        "visual": "Клинки серебряные с рунами, плащ, маска-полумесяц", "sprite": "assets/sprites/elf/lirel_1.png" },
+      { "name": { "ru": "Охотница", "en": "Huntress" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "the_hunt", "name": { "ru": "Охота", "en": "The Hunt" }, "kind": "damage_single", "value": 5, "cooldown": 12 }],
+        "visual": "Серебряная пантера бежит рядом", "sprite": "assets/sprites/elf/lirel_2.png" }
+    ],
+    "pet": { "id": "silver_panther", "name": { "ru": "Серебряная пантера", "en": "Silver Panther" }, "visual": "Пантера с серебристой шерстью и зелёными глазами",
+      "passive": { "id": "silver_panther_p", "name": { "ru": "Прыжок", "en": "Pounce" }, "kind": "buff_self", "stat": "atkSpeed", "value": 1.15, "cooldown": 0 } }
+  },
+  {
+    "id": "faelin", "race": "elf", "role": "ranger",
+    "name": { "ru": "Фаэлин, Лунный лучник", "en": "Faelin, Moon Archer" },
+    "base": { "hp": 160, "atk": 30, "atkSpeed": 1.1, "crit": 0.15, "critDmg": 1.8, "range": 6 },
+    "forms": [
+      { "name": { "ru": "Лунный лучник", "en": "Moon Archer" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "aimed_shot", "name": { "ru": "Прицельный выстрел", "en": "Aimed Shot" }, "kind": "damage_single", "value": 4, "ignoreArmor": true, "cooldown": 9 }],
+        "visual": "Длинный лук, капюшон из листвы, колчан за спиной", "sprite": "assets/sprites/elf/faelin_0.png" },
+      { "name": { "ru": "Серебряный лучник", "en": "Silver Archer" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "arrow_rain", "name": { "ru": "Дождь стрел", "en": "Arrow Rain" }, "kind": "damage_aoe", "value": 1.2, "radius": 6, "cooldown": 14 }],
+        "visual": "Лук из лунного серебра, стрелы светятся, на лице узоры", "sprite": "assets/sprites/elf/faelin_1.png" },
+      { "name": { "ru": "Совиный глаз", "en": "Owl Eye" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "owl_gaze", "name": { "ru": "Взгляд совы", "en": "Owl Gaze" }, "kind": "crit_all", "duration": 5, "cooldown": 25 }],
+        "visual": "Сова-предвестница сидит на луке", "sprite": "assets/sprites/elf/faelin_2.png" }
+    ],
+    "pet": { "id": "owl", "name": { "ru": "Сова-предвестница", "en": "Harbinger Owl" }, "visual": "Белая сова с золотыми глазами",
+      "passive": { "id": "owl_p", "name": { "ru": "Ночное зрение", "en": "Night Vision" }, "kind": "buff_self", "stat": "crit", "value": 0.1, "cooldown": 0 } }
+  },
+  {
+    "id": "eluna", "race": "elf", "role": "mage",
+    "name": { "ru": "Элуна, Хранительница звёзд", "en": "Eluna, Starkeeper" },
+    "base": { "hp": 150, "atk": 40, "atkSpeed": 0.8, "crit": 0.05, "critDmg": 1.5, "range": 5 },
+    "forms": [
+      { "name": { "ru": "Хранительница звёзд", "en": "Starkeeper" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "starfall", "name": { "ru": "Звездопад", "en": "Starfall" }, "kind": "damage_multi", "value": 2, "targets": 3, "cooldown": 11 }],
+        "visual": "Платье из листьев, посох с кристаллом-луной, босая", "sprite": "assets/sprites/elf/eluna_0.png" },
+      { "name": { "ru": "Звёздная корона", "en": "Star Crown" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "eclipse", "name": { "ru": "Лунное затмение", "en": "Lunar Eclipse" }, "kind": "debuff_enemies", "stat": "dmgTaken", "value": 2, "duration": 4, "cooldown": 20 }],
+        "visual": "Платье переходит в сияющий шлейф, посох парит отдельно, звёздная корона", "sprite": "assets/sprites/elf/eluna_1.png" },
+      { "name": { "ru": "Владычица времени", "en": "Timekeeper" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "time_stop", "name": { "ru": "Остановка времени", "en": "Time Stop" }, "kind": "time_stop", "duration": 3, "cooldown": 30 }],
+        "visual": "Звёздный лис с хвостом из созвездий", "sprite": "assets/sprites/elf/eluna_2.png" }
+    ],
+    "pet": { "id": "star_fox", "name": { "ru": "Звёздный лис", "en": "Star Fox" }, "visual": "Лис с полупрозрачным хвостом из звёзд",
+      "passive": { "id": "star_fox_p", "name": { "ru": "Созвездие", "en": "Constellation" }, "kind": "buff_self", "stat": "atk", "value": 1.1, "cooldown": 0 } }
+  },
+  {
+    "id": "silvan", "race": "elf", "role": "support",
+    "name": { "ru": "Сильван, Друид рощи", "en": "Silvan, Grove Druid" },
+    "base": { "hp": 200, "atk": 15, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 4 },
+    "forms": [
+      { "name": { "ru": "Друид рощи", "en": "Grove Druid" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "bloom", "name": { "ru": "Цветение", "en": "Bloom" }, "kind": "heal_party", "value": 0.2, "cooldown": 12 }],
+        "visual": "Старец с бородой из мха, посох-ветвь, оленьи рога", "sprite": "assets/sprites/elf/silvan_0.png" },
+      { "name": { "ru": "Старейшина рощи", "en": "Grove Elder" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "grove_blessing", "name": { "ru": "Благословение рощи", "en": "Grove Blessing" }, "kind": "buff_party", "stat": "atkSpeed", "value": 1.25, "duration": 8, "cooldown": 20 }],
+        "visual": "Рога ветвятся, на посохе цветы, вокруг летают светлячки", "sprite": "assets/sprites/elf/silvan_1.png" },
+      { "name": { "ru": "Всадник на олене", "en": "Stag Rider" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "rebirth", "name": { "ru": "Перерождение", "en": "Rebirth" }, "kind": "revive_creeps", "value": 1, "count": 1, "hp": 1.0, "cooldown": 10 }],
+        "visual": "Сильван верхом на олене-духе", "sprite": "assets/sprites/elf/silvan_2.png" }
+    ],
+    "pet": { "id": "spirit_stag", "name": { "ru": "Олень-дух", "en": "Spirit Stag" }, "visual": "Полупрозрачный олень с рогами из веток",
+      "passive": { "id": "spirit_stag_p", "name": { "ru": "Тропа", "en": "Trail" }, "kind": "heal_creeps", "value": 0.02, "cooldown": 1 } }
+  }
+]

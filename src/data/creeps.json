@@ -1,0 +1,26 @@
+{
+  "types": {
+    "infantry": { "hp": 100, "atk": 8, "range": 1, "moveSpeed": 1.0, "atkSpeed": 1.0, "behavior": "charge_nearest" },
+    "ranged":   { "hp": 45,  "atk": 14, "range": 6, "moveSpeed": 0.9, "atkSpeed": 1.0, "behavior": "keep_distance" },
+    "healer":   { "hp": 55,  "atk": 3,  "range": 5, "moveSpeed": 0.9, "atkSpeed": 1.0, "heal": 6, "behavior": "heal_lowest_pct" }
+  },
+  "levelGrowth": 1.06,
+  "defaultMix": { "infantry": 0.5, "ranged": 0.3, "healer": 0.2 },
+  "creeps": [
+    { "id": "undead_infantry", "race": "undead", "type": "infantry", "name": { "ru": "Скелет-воин", "en": "Skeleton Warrior" }, "visual": "Ржавый щит, обломок меча, пустые глазницы светятся синим", "sprite": "assets/sprites/undead/creep_infantry.png" },
+    { "id": "undead_ranged",   "race": "undead", "type": "ranged",   "name": { "ru": "Скелет-лучник", "en": "Skeleton Archer" }, "visual": "Костяной лук, колчан из рёбер", "sprite": "assets/sprites/undead/creep_ranged.png" },
+    { "id": "undead_healer",   "race": "undead", "type": "healer",   "name": { "ru": "Призрачная плакальщица", "en": "Ghost Mourner" }, "visual": "Полупрозрачная, без ног, синий дымок вместо лечения", "sprite": "assets/sprites/undead/creep_healer.png" },
+    { "id": "elf_infantry", "race": "elf", "type": "infantry", "name": { "ru": "Страж рощи", "en": "Grove Guard" }, "visual": "Лёгкий кожаный доспех, парные изогнутые клинки", "sprite": "assets/sprites/elf/creep_infantry.png" },
+    { "id": "elf_ranged",   "race": "elf", "type": "ranged",   "name": { "ru": "Лунный лучник", "en": "Moon Archer" }, "visual": "Длинный лук, капюшон из листьев, стрелы со свечением", "sprite": "assets/sprites/elf/creep_ranged.png" },
+    { "id": "elf_healer",   "race": "elf", "type": "healer",   "name": { "ru": "Друид-ученик", "en": "Druid Apprentice" }, "visual": "Посох с цветком, лечит зелёными спорами", "sprite": "assets/sprites/elf/creep_healer.png" },
+    { "id": "dwarf_infantry", "race": "dwarf", "type": "infantry", "name": { "ru": "Щитоносец", "en": "Shieldbearer" }, "visual": "Башенный щит из клёпаной бронзы, короткий молот", "sprite": "assets/sprites/dwarf/creep_infantry.png" },
+    { "id": "dwarf_ranged",   "race": "dwarf", "type": "ranged",   "name": { "ru": "Мушкетёр", "en": "Musketeer" }, "visual": "Паровой мушкет, гогглы, дымок после выстрела", "sprite": "assets/sprites/dwarf/creep_ranged.png" },
+    { "id": "dwarf_healer",   "race": "dwarf", "type": "healer",   "name": { "ru": "Механик", "en": "Mechanic" }, "visual": "Ранец с трубками, лечит струёй пара", "sprite": "assets/sprites/dwarf/creep_healer.png" },
+    { "id": "human_infantry", "race": "human", "type": "infantry", "name": { "ru": "Пехотинец", "en": "Footman" }, "visual": "Кольчуга, копьё, щит с гербом", "sprite": "assets/sprites/human/creep_infantry.png" },
+    { "id": "human_ranged",   "race": "human", "type": "ranged",   "name": { "ru": "Арбалетчик", "en": "Crossbowman" }, "visual": "Тяжёлый арбалет, шлем с забралом", "sprite": "assets/sprites/human/creep_ranged.png" },
+    { "id": "human_healer",   "race": "human", "type": "healer",   "name": { "ru": "Полевой лекарь", "en": "Field Medic" }, "visual": "Белая накидка с крестом, сумка с бинтами, золотая вспышка", "sprite": "assets/sprites/human/creep_healer.png" },
+    { "id": "orc_infantry", "race": "orc", "type": "infantry", "name": { "ru": "Громила", "en": "Brute" }, "visual": "Голый торс, дубина с шипами, боевая раскраска", "sprite": "assets/sprites/orc/creep_infantry.png" },
+    { "id": "orc_ranged",   "race": "orc", "type": "ranged",   "name": { "ru": "Метатель", "en": "Thrower" }, "visual": "Копья-дротики, ожерелье из клыков", "sprite": "assets/sprites/orc/creep_ranged.png" },
+    { "id": "orc_healer",   "race": "orc", "type": "healer",   "name": { "ru": "Шаман-костоправ", "en": "Bone Shaman" }, "visual": "Маска из черепа, тотем-погремушка, красные руны", "sprite": "assets/sprites/orc/creep_healer.png" }
+  ]
+}

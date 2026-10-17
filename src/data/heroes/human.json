@@ -1,0 +1,92 @@
+[
+  {
+    "id": "alderic", "race": "human", "role": "tank",
+    "name": { "ru": "Сэр Альдерик, Паладин", "en": "Sir Alderic, Paladin" },
+    "base": { "hp": 400, "atk": 20, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 1 },
+    "forms": [
+      { "name": { "ru": "Паладин", "en": "Paladin" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "holy_shield", "name": { "ru": "Святой щит", "en": "Holy Shield" }, "kind": "shield_self", "value": 0.3, "cooldown": 15 }],
+        "visual": "Полный латный доспех, щит с крестом, длинный меч", "sprite": "assets/sprites/human/alderic_0.png" },
+      { "name": { "ru": "Золотой паладин", "en": "Golden Paladin" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "challenge", "name": { "ru": "Воззвание", "en": "Challenge" }, "kind": "taunt", "duration": 4, "cooldown": 18 }],
+        "visual": "Латы золочёные, плащ, нимб над шлемом", "sprite": "assets/sprites/human/alderic_1.png" },
+      { "name": { "ru": "Грифоний рыцарь", "en": "Griffon Knight" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "wings_of_justice", "name": { "ru": "Крылья правосудия", "en": "Wings of Justice" }, "kind": "airborne_party", "duration": 5, "cooldown": 30 }],
+        "visual": "Альдерик верхом на грифоне, крылья расправлены", "sprite": "assets/sprites/human/alderic_2.png" }
+    ],
+    "pet": { "id": "griffon", "name": { "ru": "Грифон", "en": "Griffon" }, "visual": "Золотисто-белый грифон",
+      "passive": { "id": "griffon_p", "name": { "ru": "Крылья", "en": "Wings" }, "kind": "buff_party", "stat": "moveSpeed", "value": 1.15, "cooldown": 0 } }
+  },
+  {
+    "id": "cassia", "race": "human", "role": "fighter",
+    "name": { "ru": "Кассия, Дуэлянтка", "en": "Cassia, Duelist" },
+    "base": { "hp": 220, "atk": 35, "atkSpeed": 1.2, "crit": 0.1, "critDmg": 1.6, "range": 1 },
+    "forms": [
+      { "name": { "ru": "Дуэлянтка", "en": "Duelist" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "flurry", "name": { "ru": "Серия", "en": "Flurry" }, "kind": "damage_single", "value": 0.8, "hits": 4, "cooldown": 7 }],
+        "visual": "Рапира, шляпа с пером, красный плащ", "sprite": "assets/sprites/human/cassia_0.png" },
+      { "name": { "ru": "Мастер клинка", "en": "Blademaster" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "feint", "name": { "ru": "Финт", "en": "Feint" }, "kind": "dodge", "value": 1.0, "duration": 3, "cooldown": 15 }],
+        "visual": "Две рапиры, плащ длиннее, маска", "sprite": "assets/sprites/human/cassia_1.png" },
+      { "name": { "ru": "Загонщица", "en": "Hound Master" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "corral", "name": { "ru": "Загон", "en": "Corral" }, "kind": "damage_single", "value": 6, "root": 2, "cooldown": 12 }],
+        "visual": "Боевой пёс бежит у ног", "sprite": "assets/sprites/human/cassia_2.png" }
+    ],
+    "pet": { "id": "war_dog", "name": { "ru": "Боевой пёс", "en": "War Dog" }, "visual": "Крупный пёс в кожаной сбруе",
+      "passive": { "id": "war_dog_p", "name": { "ru": "Чутьё", "en": "Scent" }, "kind": "buff_self", "stat": "crit", "value": 0.1, "cooldown": 0 } }
+  },
+  {
+    "id": "brenna", "race": "human", "role": "ranger",
+    "name": { "ru": "Бренна, Арбалетчица", "en": "Brenna, Crossbowwoman" },
+    "base": { "hp": 160, "atk": 30, "atkSpeed": 1.1, "crit": 0.15, "critDmg": 1.8, "range": 6 },
+    "forms": [
+      { "name": { "ru": "Арбалетчица", "en": "Crossbowwoman" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "bolt", "name": { "ru": "Болт", "en": "Bolt" }, "kind": "damage_single", "value": 3, "stun": 1, "cooldown": 8 }],
+        "visual": "Тяжёлый арбалет, кираса, шлем с забралом", "sprite": "assets/sprites/human/brenna_0.png" },
+      { "name": { "ru": "Многозарядница", "en": "Repeater" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "triple_volley", "name": { "ru": "Залп", "en": "Volley" }, "kind": "damage_multi", "value": 2, "targets": 3, "cooldown": 10 }],
+        "visual": "Арбалет-многозарядник, наплечник с гербом, повязка", "sprite": "assets/sprites/human/brenna_1.png" },
+      { "name": { "ru": "Соколиный глаз", "en": "Hawkeye" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "hawkeye", "name": { "ru": "Соколиный глаз", "en": "Hawkeye" }, "kind": "buff_party", "stat": "range", "value": 2, "critFar": true, "duration": 6, "cooldown": 25 }],
+        "visual": "Сокол-охотник кружит выше всех", "sprite": "assets/sprites/human/brenna_2.png" }
+    ],
+    "pet": { "id": "hawk", "name": { "ru": "Сокол-охотник", "en": "Hunting Hawk" }, "visual": "Коричневый сокол с красной лентой",
+      "passive": { "id": "hawk_p", "name": { "ru": "Высота", "en": "Altitude" }, "kind": "buff_self", "stat": "range", "value": 1.15, "cooldown": 0 } }
+  },
+  {
+    "id": "oren", "race": "human", "role": "mage",
+    "name": { "ru": "Магистр Орен, Боевой маг", "en": "Magister Oren, Battlemage" },
+    "base": { "hp": 150, "atk": 40, "atkSpeed": 0.8, "crit": 0.05, "critDmg": 1.5, "range": 5 },
+    "forms": [
+      { "name": { "ru": "Боевой маг", "en": "Battlemage" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "fireball", "name": { "ru": "Огненный шар", "en": "Fireball" }, "kind": "damage_aoe", "value": 2.5, "radius": 2, "cooldown": 10 }],
+        "visual": "Мантия с золотой каймой, посох с книгой, очки", "sprite": "assets/sprites/human/oren_0.png" },
+      { "name": { "ru": "Архимаг", "en": "Archmage" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "chain_lightning", "name": { "ru": "Цепная молния", "en": "Chain Lightning" }, "kind": "damage_multi", "value": 1.8, "targets": 6, "cooldown": 12 }],
+        "visual": "Мантия в рунах, за спиной парят 3 книги", "sprite": "assets/sprites/human/oren_1.png" },
+      { "name": { "ru": "Летописец", "en": "Chronicler" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "rewrite", "name": { "ru": "Переписать", "en": "Rewrite" }, "kind": "double_cast", "cooldown": 35 }],
+        "visual": "Элементаль-страница: летающая книга-существо", "sprite": "assets/sprites/human/oren_2.png" }
+    ],
+    "pet": { "id": "page_elemental", "name": { "ru": "Элементаль-страница", "en": "Page Elemental" }, "visual": "Летающая раскрытая книга с глазами",
+      "passive": { "id": "page_elemental_p", "name": { "ru": "Знание", "en": "Knowledge" }, "kind": "buff_self", "stat": "cooldown", "value": 0.9, "cooldown": 0 } }
+  },
+  {
+    "id": "martin", "race": "human", "role": "support",
+    "name": { "ru": "Отец Мартин, Капеллан", "en": "Father Martin, Chaplain" },
+    "base": { "hp": 200, "atk": 15, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 4 },
+    "forms": [
+      { "name": { "ru": "Капеллан", "en": "Chaplain" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "prayer", "name": { "ru": "Молитва", "en": "Prayer" }, "kind": "heal_party", "value": 0.15, "cooldown": 5 }],
+        "visual": "Белая ряса, посох с колоколом, знамя за спиной", "sprite": "assets/sprites/human/martin_0.png" },
+      { "name": { "ru": "Знаменосец", "en": "Standard Bearer" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "kings_banner", "name": { "ru": "Знамя короля", "en": "King's Banner" }, "kind": "buff_party", "stat": "all", "value": 1.2, "duration": 10, "cooldown": 25 }],
+        "visual": "Ряса с золотыми нитями, знамя больше, на груди реликварий", "sprite": "assets/sprites/human/martin_1.png" },
+      { "name": { "ru": "Святой", "en": "Saint" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "resurrection", "name": { "ru": "Воскрешение", "en": "Resurrection" }, "kind": "revive_creeps", "value": 1, "hp": 1.0, "cooldown": 40 }],
+        "visual": "Маленький ангел-хранитель парит у плеча", "sprite": "assets/sprites/human/martin_2.png" }
+    ],
+    "pet": { "id": "guardian_angel", "name": { "ru": "Ангел-хранитель", "en": "Guardian Angel" }, "visual": "Маленький ангел с золотым нимбом",
+      "passive": { "id": "guardian_angel_p", "name": { "ru": "Благодать", "en": "Grace" }, "kind": "heal_party", "value": 0.01, "cooldown": 1 } }
+  }
+]

@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+.env.local
+src/assets/raw/**
+!src/assets/raw/.gitkeep
+*.log

@@ -1,0 +1,16 @@
+[
+  { "id": "barracks_undead", "zone": "village", "name": { "ru": "Казармы нежити", "en": "Undead Barracks" }, "maxLevel": 500, "costBase": 10, "costGrowth": 1.12, "effect": { "kind": "creep_level", "race": "undead", "perLevel": 1.06 } },
+  { "id": "barracks_elf",    "zone": "village", "name": { "ru": "Казармы эльфов", "en": "Elf Barracks" },    "maxLevel": 500, "costBase": 10, "costGrowth": 1.12, "effect": { "kind": "creep_level", "race": "elf",    "perLevel": 1.06 } },
+  { "id": "barracks_dwarf",  "zone": "village", "name": { "ru": "Казармы гномов", "en": "Dwarf Barracks" },  "maxLevel": 500, "costBase": 10, "costGrowth": 1.12, "effect": { "kind": "creep_level", "race": "dwarf",  "perLevel": 1.06 } },
+  { "id": "barracks_human",  "zone": "village", "name": { "ru": "Казармы людей", "en": "Human Barracks" },   "maxLevel": 500, "costBase": 10, "costGrowth": 1.12, "effect": { "kind": "creep_level", "race": "human",  "perLevel": 1.06 } },
+  { "id": "barracks_orc",    "zone": "village", "name": { "ru": "Казармы орков", "en": "Orc Barracks" },     "maxLevel": 500, "costBase": 10, "costGrowth": 1.12, "effect": { "kind": "creep_level", "race": "orc",    "perLevel": 1.06 } },
+  { "id": "range",    "zone": "village", "name": { "ru": "Полигон", "en": "Training Range" }, "maxLevel": 100, "costBase": 50,  "costGrowth": 1.2,  "effect": { "kind": "creep_atk", "perLevel": 0.02 } },
+  { "id": "infirmary","zone": "village", "name": { "ru": "Лазарет", "en": "Infirmary" },      "maxLevel": 100, "costBase": 50,  "costGrowth": 1.2,  "effect": { "kind": "creep_heal_and_hp", "healPerLevel": 0.03, "infantryHpPerLevel": 0.04 } },
+  { "id": "banner",   "zone": "village", "name": { "ru": "Знамёнщик", "en": "Standard Bearer" }, "maxLevel": 100, "costBase": 200, "costGrowth": 1.25, "effect": { "kind": "creep_cap", "perLevels": 25, "add": 1 } },
+
+  { "id": "mine",    "zone": "base", "name": { "ru": "Золотая шахта", "en": "Gold Mine" }, "maxLevel": 300, "costBase": 20,  "costGrowth": 1.15, "effect": { "kind": "gold_per_sec", "base": 5, "growth": 1.1 } },
+  { "id": "storage", "zone": "base", "name": { "ru": "Склад", "en": "Storage" },        "maxLevel": 160, "costBase": 100, "costGrowth": 1.18, "effect": { "kind": "offline_hours", "base": 8, "perLevels": 10, "add": 1, "max": 24 } },
+  { "id": "tavern",  "zone": "base", "name": { "ru": "Таверна", "en": "Tavern" },       "maxLevel": 100, "costBase": 150, "costGrowth": 1.22, "effect": { "kind": "crystal_bonus", "perLevel": 0.02 } },
+  { "id": "kennel",  "zone": "base", "name": { "ru": "Псарня", "en": "Kennel" },        "maxLevel": 50,  "costBase": 300, "costGrowth": 1.3,  "effect": { "kind": "pet_food_per_day", "perLevels": 5, "add": 1 } },
+  { "id": "portal",  "zone": "base", "name": { "ru": "Портал", "en": "Portal" },        "maxLevel": 100, "costBase": 500, "costGrowth": 1.2,  "effect": { "kind": "unlock_dungeons", "unlocks": { "crypt": 1, "grove": 10, "mine": 25, "citadel": 50, "arena": 100 } } }
+]

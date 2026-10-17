@@ -1,0 +1,24 @@
+{
+  "tickMs": 100,
+  "mob": { "hpBase": 50, "hpGrowth": 1.11, "hpStepEvery": 10, "hpStepMult": 1.5, "atkBase": 4, "atkGrowth": 1.09, "baseHpMult": 20 },
+  "floor": { "wavesPerFloor": 3, "mobsPerWave": 5, "bossEvery": 10, "raidBossEvery": 50, "bossHpMult": 5, "raidBossHpMult": 20, "raidBossTimerSec": 90 },
+  "rewards": { "goldBase": 10, "goldGrowth": 1.10, "floorPointsPerN": 5 },
+  "hero": { "costBase": 15, "costGrowth": 1.08, "atkGrowth": 1.07, "hpGrowth": 1.06, "milestoneEvery": 10, "milestoneMult": 1.5, "formMult": [1.0, 1.8, 3.2], "creepsPerForm": [4, 6, 10], "formUnlock": { "awakening": { "floors": 50, "floorPoints": 500 }, "union": { "petLevel": 10 } } },
+  "party": { "slotsAtFloor": [1, 10, 25, 50, 100], "monoRaceAtkMult": 1.15, "rainbowCreepMult": 1.10 },
+  "pets": { "maxLevel": 30, "foodCostPerLevel": 5, "foodCostPower": 2, "statPerLevel": 0.05, "creepEveryLevels": 5, "passiveAt": 5, "unionAt": 10, "auraAt": 20, "noCooldownAt": 30, "eggEveryFloors": 10 },
+  "prestige": { "divisor": 10, "power": 1.5, "tavernPerLevel": 0.02, "crystalAtkMultPer": 0.01, "crystalGoldMultPer": 0.01, "heroSummonCost": 50 },
+  "offline": { "baseHours": 8, "maxHours": 24 },
+  "dungeons": { "durationSec": 60, "runsPerDay": 3, "resourcePerWave": 10 },
+  "ads": {
+    "speed":     { "mult": 2, "durationMin": 30, "cooldownMin": 30, "maxStackMin": 120 },
+    "resources": { "goldHoursOfFloor": 2, "floorPoints": 20, "dungeonResource": 30, "perDay": 6 },
+    "gems":      { "gems": 10, "perDay": 5 },
+    "boost":     { "statMult": 1.05, "durationMin": 60, "cooldownMin": 60 },
+    "stubScreenText": "RVPower",
+    "stubScreenSec": 3
+  },
+  "gems": { "heroSummon": 300, "dungeonReset": 50, "extraRaidEntry": 100, "cosmeticMin": 200, "cosmeticMax": 800, "permanentGold": { "cost": 1000, "mult": 1.1 } },
+  "guild": { "maxMembers": 30, "createGems": 500, "createFloorPoints": 50000, "goldPerLevel": 0.01, "goldCap": 0.30,
+    "raid": { "hpDpsMult": 50, "hpSeconds": 600, "entries": 3, "entrySec": 60, "damageTolerance": 0.02 },
+    "war": { "attacksPerDay": 5, "winPoints": 1, "firstTryBonus": 2, "seasonWeeks": 8, "ratingResetPct": 0.5, "matchmakingCron": "0 0 * * 1" } }
+}

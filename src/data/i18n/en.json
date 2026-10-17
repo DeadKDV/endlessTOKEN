@@ -1,0 +1,15 @@
+{
+  "currency": { "gold": "Gold", "floorPoints": "Floor Points", "crystals": "Ancestor Crystals", "petFood": "Pet Food", "bone": "Bone Dust", "leaf": "Moon Leaf", "ore": "Star Ore", "seal": "Royal Seal", "totem": "Blood Totem", "gems": "Gems" },
+  "race": { "undead": "Undead", "elf": "Elves", "dwarf": "Dwarves", "human": "Humans", "orc": "Orcs" },
+  "role": { "tank": "Tank", "fighter": "Fighter", "ranger": "Ranger", "mage": "Mage", "support": "Support" },
+  "creepType": { "infantry": "Infantry", "ranged": "Ranged", "healer": "Healer" },
+  "form": { "0": "Base", "1": "Awakening", "2": "Union" },
+  "dungeon": { "crypt": "Crypt", "grove": "Grove", "mine": "Mine", "citadel": "Citadel", "arena": "Arena" },
+  "screen": { "battle": "Battle", "heroes": "Heroes", "village": "Village", "base": "Base", "dungeons": "Dungeons", "guild": "Guild", "shop": "Shop", "settings": "Settings" },
+  "action": { "upgrade": "Upgrade", "prestige": "Resurrection", "collect": "Collect", "summon": "Summon", "equip": "Equip", "enter": "Enter", "attack": "Attack", "watchAd": "Watch ad", "buy": "Buy" },
+  "ads": { "speed": "Speed ×2", "resources": "Resources", "gems": "Gems", "boost": "Boost +5%", "stub": "RVPower" },
+  "offline": { "title": "Welcome back!", "earned": "While you were away, your party earned:", "capped": "Storage is full — upgrade it at the base" },
+  "prestige": { "confirm": "Reset floor and hero levels for {n} crystals?", "button": "Resurrect" },
+  "guild": { "raid": "Raid Boss", "war": "Guild War", "chat": "Chat", "members": "Members" },
+  "floor": "Floor {n}", "level": "Lv. {n}", "wave": "Wave {n}/{total}", "boss": "Boss", "raidBoss": "Raid Boss"
+}

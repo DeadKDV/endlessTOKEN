@@ -1,0 +1,111 @@
+[
+  {
+    "id": "morven",
+    "race": "undead",
+    "role": "tank",
+    "name": { "ru": "Морвен, Рыцарь смерти", "en": "Morven, Death Knight" },
+    "base": { "hp": 400, "atk": 20, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 1 },
+    "forms": [
+      {
+        "name": { "ru": "Рыцарь смерти", "en": "Death Knight" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "bone_wall", "name": { "ru": "Костяная стена", "en": "Bone Wall" }, "kind": "shield_party", "value": 0.2, "duration": 5, "cooldown": 20 }],
+        "visual": "Скелет в ржавых латах, щит с трещиной, зазубренный меч",
+        "sprite": "assets/sprites/undead/morven_0.png"
+      },
+      {
+        "name": { "ru": "Пробуждённый рыцарь", "en": "Awakened Knight" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "frost_breath", "name": { "ru": "Ледяное дыхание", "en": "Frost Breath" }, "kind": "slow", "value": 0.4, "duration": 4, "cooldown": 15 }],
+        "visual": "Латы чёрные с синими рунами, щит цел и горит синим, плащ из тумана",
+        "sprite": "assets/sprites/undead/morven_1.png"
+      },
+      {
+        "name": { "ru": "Всадник могил", "en": "Grave Rider" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "funeral_march", "name": { "ru": "Погребальный марш", "en": "Funeral March" }, "kind": "invuln_creeps", "duration": 4, "cooldown": 30 }],
+        "visual": "Морвен верхом на призрачном коне из синего пламени",
+        "sprite": "assets/sprites/undead/morven_2.png"
+      }
+    ],
+    "pet": { "id": "ghost_horse", "name": { "ru": "Призрачный конь", "en": "Ghost Horse" }, "visual": "Конь из синего пламени, без ног, стелется над землёй",
+      "passive": { "id": "ghost_horse_p", "name": { "ru": "Галоп", "en": "Gallop" }, "kind": "buff_party", "stat": "moveSpeed", "value": 1.15, "cooldown": 0 } }
+  },
+  {
+    "id": "groul",
+    "race": "undead",
+    "role": "fighter",
+    "name": { "ru": "Гроул, Гуль-мясник", "en": "Groul, Ghoul Butcher" },
+    "base": { "hp": 220, "atk": 35, "atkSpeed": 1.2, "crit": 0.1, "critDmg": 1.6, "range": 1 },
+    "forms": [
+      { "name": { "ru": "Гуль-мясник", "en": "Ghoul Butcher" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "rend", "name": { "ru": "Разорвать", "en": "Rend" }, "kind": "damage_single", "value": 3, "cooldown": 8 }],
+        "visual": "Горбатый гуль в лохмотьях, два тесака, гнилая кожа", "sprite": "assets/sprites/undead/groul_0.png" },
+      { "name": { "ru": "Скобованный гуль", "en": "Stapled Ghoul" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "feast", "name": { "ru": "Пир", "en": "Feast" }, "kind": "lifesteal", "value": 0.5, "cooldown": 0 }],
+        "visual": "Скобы и крюки на теле, тесаки стали пилами, рычит", "sprite": "assets/sprites/undead/groul_1.png" },
+      { "name": { "ru": "Носитель чумы", "en": "Plague Bearer" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "contagion", "name": { "ru": "Зараза", "en": "Contagion" }, "kind": "on_kill_aoe", "value": 0.3, "radius": 2, "cooldown": 0 }],
+        "visual": "Облако трупных мух вокруг Гроула", "sprite": "assets/sprites/undead/groul_2.png" }
+    ],
+    "pet": { "id": "fly_swarm", "name": { "ru": "Рой трупных мух", "en": "Carrion Swarm" }, "visual": "Облако чёрных точек с зелёным отливом",
+      "passive": { "id": "fly_swarm_p", "name": { "ru": "Зуд", "en": "Itch" }, "kind": "debuff_enemies", "stat": "atkSpeed", "value": 0.9, "cooldown": 0 } }
+  },
+  {
+    "id": "silva",
+    "race": "undead",
+    "role": "ranger",
+    "name": { "ru": "Сильва, Банши-стрелок", "en": "Silva, Banshee Archer" },
+    "base": { "hp": 160, "atk": 30, "atkSpeed": 1.1, "crit": 0.15, "critDmg": 1.8, "range": 6 },
+    "forms": [
+      { "name": { "ru": "Банши-стрелок", "en": "Banshee Archer" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "wail", "name": { "ru": "Крик", "en": "Wail" }, "kind": "knockback", "value": 3, "cooldown": 12 }],
+        "visual": "Призрачная женщина с луком из позвоночника, полупрозрачная", "sprite": "assets/sprites/undead/silva_0.png" },
+      { "name": { "ru": "Плакальщица", "en": "Mourner" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "soul_volley", "name": { "ru": "Залп душ", "en": "Soul Volley" }, "kind": "damage_multi", "value": 1.5, "targets": 5, "cooldown": 10 }],
+        "visual": "Рваное платье развевается, лук светится, стрелы из душ", "sprite": "assets/sprites/undead/silva_1.png" },
+      { "name": { "ru": "Жница", "en": "Reaper" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "harvest", "name": { "ru": "Жатва", "en": "Harvest" }, "kind": "stack_atk", "value": 0.01, "cap": 0, "cooldown": 0 }],
+        "visual": "Блуждающий огонёк кружит над ней", "sprite": "assets/sprites/undead/silva_2.png" }
+    ],
+    "pet": { "id": "wisp", "name": { "ru": "Блуждающий огонёк", "en": "Wisp" }, "visual": "Синий огонёк с хвостом",
+      "passive": { "id": "wisp_p", "name": { "ru": "Свет", "en": "Light" }, "kind": "buff_party", "stat": "crit", "value": 0.05, "cooldown": 0 } }
+  },
+  {
+    "id": "valtor",
+    "race": "undead",
+    "role": "mage",
+    "name": { "ru": "Валтор, Лич", "en": "Valtor, Lich" },
+    "base": { "hp": 150, "atk": 40, "atkSpeed": 0.8, "crit": 0.05, "critDmg": 1.5, "range": 5 },
+    "forms": [
+      { "name": { "ru": "Лич", "en": "Lich" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "ice_grave", "name": { "ru": "Ледяная могила", "en": "Ice Grave" }, "kind": "damage_aoe", "value": 2, "radius": 2, "stun": 2, "cooldown": 12 }],
+        "visual": "Худой череп в капюшоне, посох с черепом, книга на цепи", "sprite": "assets/sprites/undead/valtor_0.png" },
+      { "name": { "ru": "Ледяной король", "en": "Frost King" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "raise_dead", "name": { "ru": "Поднять мёртвых", "en": "Raise Dead" }, "kind": "summon", "value": 6, "cooldown": 20 }],
+        "visual": "Корона из льда, посох с кристаллом, парит над землёй", "sprite": "assets/sprites/undead/valtor_1.png" },
+      { "name": { "ru": "Бессмертный", "en": "Immortal" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "phylactery_rez", "name": { "ru": "Бессмертие", "en": "Immortality" }, "kind": "revive_self", "value": 1, "cooldown": 0 }],
+        "visual": "Летающий кристалл-филактерия с душой внутри", "sprite": "assets/sprites/undead/valtor_2.png" }
+    ],
+    "pet": { "id": "phylactery", "name": { "ru": "Филактерия", "en": "Phylactery" }, "visual": "Парящий синий кристалл в костяной оправе",
+      "passive": { "id": "phylactery_p", "name": { "ru": "Накопитель", "en": "Reservoir" }, "kind": "buff_self", "stat": "atk", "value": 1.1, "cooldown": 0 } }
+  },
+  {
+    "id": "mortis",
+    "race": "undead",
+    "role": "support",
+    "name": { "ru": "Мортис, Жрец чумы", "en": "Mortis, Plague Priest" },
+    "base": { "hp": 200, "atk": 15, "atkSpeed": 1.0, "crit": 0.05, "critDmg": 1.5, "range": 4 },
+    "forms": [
+      { "name": { "ru": "Жрец чумы", "en": "Plague Priest" }, "statMult": 1.0, "creeps": 4,
+        "abilities": [{ "id": "necromancy_heal", "name": { "ru": "Некромантия", "en": "Necromancy" }, "kind": "heal_party", "value": 0.15, "cooldown": 10 }],
+        "visual": "Полный капюшон, маска с клювом, кадило с зелёным дымом", "sprite": "assets/sprites/undead/mortis_0.png" },
+      { "name": { "ru": "Чумной доктор", "en": "Plague Doctor" }, "statMult": 1.8, "creeps": 6,
+        "abilities": [{ "id": "plague_cloud", "name": { "ru": "Чумное облако", "en": "Plague Cloud" }, "kind": "debuff_enemies", "stat": "atk", "value": 0.7, "duration": 6, "cooldown": 18 }],
+        "visual": "Клюв железный, кадил два, роба в пятнах", "sprite": "assets/sprites/undead/mortis_1.png" },
+      { "name": { "ru": "Падальщик", "en": "Carrion Priest" }, "statMult": 3.2, "creeps": 10,
+        "abilities": [{ "id": "life_theft", "name": { "ru": "Кража жизни", "en": "Life Theft" }, "kind": "lifesteal_party", "value": 0.1, "cooldown": 0 }],
+        "visual": "Ворон-падальщик на плече", "sprite": "assets/sprites/undead/mortis_2.png" }
+    ],
+    "pet": { "id": "raven", "name": { "ru": "Ворон-падальщик", "en": "Carrion Raven" }, "visual": "Чёрный ворон с синими глазами",
+      "passive": { "id": "raven_p", "name": { "ru": "Зоркость", "en": "Keen Eye" }, "kind": "buff_party", "stat": "range", "value": 1.1, "cooldown": 0 } }
+  }
+]
