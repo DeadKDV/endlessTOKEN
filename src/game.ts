@@ -56,16 +56,26 @@ export function showToast(text: string) { toast.set({ id: ++toastId, text }); }
 let acc = 0;
 const TICK = economy.tickMs;
 
-export function boot() {
+/** Доход за отлучку с момента since: при запуске и при возврате на свёрнутую вкладку (там бой стоит - браузер не крутит кадры). */
+function creditOffline(since: number) {
   const s = get(save);
   const p = buildParty(s);
   const rate = goldMult(s) * (1 + partyArtifactSum(s, 'offline_rate'));
-  const off = computeOffline(Date.now(), s.savedAt, s.floor, estimateFloorSeconds(s.floor, partyDps(p), totalFloorHp(s.floor)), s.base.mine ?? 0, s.base.storage ?? 0, rate);
+  const off = computeOffline(Date.now(), since, s.floor, estimateFloorSeconds(s.floor, partyDps(p), totalFloorHp(s.floor)), s.base.mine ?? 0, s.base.storage ?? 0, rate);
   // попап только после настоящей отлучки; за пару минут доход зачисляем молча
   if (off.gold > 0) addGold(off.gold);
   if (off.gold > 1 && off.seconds >= 300) offlinePopup.set(off);
+}
+
+let hiddenAt = 0;
+export function boot() {
+  creditOffline(get(save).savedAt);
   startFloor();
   setInterval(() => saveLocal(get(save)), 10_000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hiddenAt = Date.now();
+    else if (hiddenAt) { creditOffline(hiddenAt); hiddenAt = 0; }
+  });
 }
 
 export function startFloor() {
