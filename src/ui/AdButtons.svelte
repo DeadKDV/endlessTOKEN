@@ -8,6 +8,18 @@
 
   let showing = $state<string | null>(null);
   const A = economy.ads;
+  let now = $state(Date.now());
+  $effect(() => { const i = setInterval(() => (now = Date.now()), 1000); return () => clearInterval(i); });
+  const mmss = (ms: number) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const items = $derived.by(() => {
+    const ad = $save.ads, speedLeft = ad.speedUntil - now, boostLeft = ad.boostUntil - now;
+    return [
+      { k: 'speed' as const, label: t.ads.speedS, full: t.ads.speed, left: speedLeft, off: false, state: speedLeft > 0 ? mmss(speedLeft) : '×2' },
+      { k: 'resources' as const, label: t.ads.resourcesS, full: t.ads.resources, left: 0, off: ad.resourcesToday >= A.resources.perDay, state: `${A.resources.perDay - ad.resourcesToday}/${A.resources.perDay}` },
+      { k: 'gems' as const, label: t.ads.gemsS, full: t.ads.gems, left: 0, off: ad.gemsToday >= A.gems.perDay, state: `${A.gems.perDay - ad.gemsToday}/${A.gems.perDay}` },
+      { k: 'boost' as const, label: t.ads.boostS, full: t.ads.boost, left: boostLeft, off: false, state: boostLeft > 0 ? mmss(boostLeft) : '+5%' },
+    ];
+  });
 
   async function watch(kind: 'speed' | 'resources' | 'gems' | 'boost') {
     // TODO: при VITE_AD_PROVIDER !== 'stub' — показать ролик сети и ждать callback; награду выдаёт сервер (supabase/schema.sql: ad_rewards)
@@ -25,10 +37,18 @@
 </script>
 
 <div class="ads">
-  <button onclick={() => watch('speed')}>▶ {t.ads.speed}</button>
-  <button onclick={() => watch('resources')} disabled={$save.ads.resourcesToday >= A.resources.perDay}>▶ {t.ads.resources}</button>
-  <button onclick={() => watch('gems')} disabled={$save.ads.gemsToday >= A.gems.perDay}>▶ {t.ads.gems}</button>
-  <button onclick={() => watch('boost')}>▶ {t.ads.boost}</button>
+  {#each items as it (it.k)}
+    <button class:active={it.left > 0} disabled={it.off} title={it.full} aria-label={it.full} onclick={() => watch(it.k)}>
+      <span class="ic" aria-hidden="true">
+        {#if it.k === 'speed'}<svg viewBox="0 0 24 24"><path d="M4 5l8 7-8 7zM12 5l8 7-8 7z" /></svg>
+        {:else if it.k === 'resources'}<svg viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3" /><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" fill="none" /></svg>
+        {:else if it.k === 'gems'}<svg viewBox="0 0 24 24"><path d="M7 4h10l4 6-9 11L3 10z" /></svg>
+        {:else}<svg viewBox="0 0 24 24"><path d="M12 3l7 8h-4v9H9v-9H5z" /></svg>{/if}
+      </span>
+      <span class="lb">{it.label}</span>
+      <span class="st">{it.state}</span>
+    </button>
+  {/each}
 </div>
 
 {#if showing}
@@ -36,7 +56,13 @@
 {/if}
 
 <style>
-  .ads { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .ads button { min-width: 0; min-height: 48px; padding: 3px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 10px; line-height: 1.1; }
+  .ads .ic svg { display: block; width: 18px; height: 18px; fill: #ffd54f; stroke: #ffd54f; stroke-width: 1.6; stroke-linejoin: round; }
+  .ads .lb { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ccc; }
+  .ads .st { color: #888; }
+  .ads button.active { border-color: #ffd54f; background: #3a3320; }
+  .ads button.active .st { color: #ffd54f; }
   .stubscreen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10; }
   .stubscreen h1 { color: #ffd54f; font: bold 48px monospace; letter-spacing: 4px; }
 </style>
