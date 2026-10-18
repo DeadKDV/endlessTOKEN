@@ -1,8 +1,5 @@
 <script lang="ts">
-  import { BUILDINGS } from '../../sim/buildings';
-  import BuildingRow from '../BuildingRow.svelte';
+  import BuildingGroups from '../BuildingGroups.svelte';
 </script>
 
-{#each BUILDINGS.filter(b => b.zone === 'village') as b (b.id)}
-  <BuildingRow id={b.id} />
-{/each}
+<BuildingGroups zone="village" order={['barracks', 'squad']} group={b => (b.id.startsWith('barracks_') ? 'barracks' : 'squad')} />

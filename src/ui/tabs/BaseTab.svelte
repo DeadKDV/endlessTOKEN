@@ -1,11 +1,12 @@
 <script lang="ts">
   import { save, claimFood } from '../../game';
-  import { BUILDINGS, buildingLevel } from '../../sim/buildings';
+  import { buildingLevel } from '../../sim/buildings';
   import { offlineHours } from '../../sim/economy';
   import { dailyFoodAmount } from '../../sim/pets';
   import { localDate } from '../../sim/party';
   import economy from '../../data/economy.json';
-  import BuildingRow from '../BuildingRow.svelte';
+  import BuildingGroups from '../BuildingGroups.svelte';
+  import { fmt } from '../format';
   import { t, tpl } from '../text';
 
   const hours = $derived(offlineHours(buildingLevel($save, 'storage')));
@@ -17,12 +18,10 @@
   <span>{tpl(t.building.offlineMeter, { n: hours, max: economy.offline.maxHours })}</span>
 </div>
 
-{#each BUILDINGS.filter(b => b.zone === 'base') as b (b.id)}
-  <BuildingRow id={b.id} />
-{/each}
+<BuildingGroups zone="base" order={['mining', 'offline', 'other']} group={b => ({ mine: 'mining', storage: 'offline' } as Record<string, string>)[b.id] ?? 'other'} />
 
 <div class="row">
-  <span>🍖 {$save.petFood}</span>
+  <span>🍖 {fmt($save.petFood)}</span>
   <button disabled={claimed} onclick={claimFood}>
     {claimed ? t.building.dailyFoodDone : tpl(t.building.dailyFood, { n: dailyFoodAmount($save) })}
   </button>
