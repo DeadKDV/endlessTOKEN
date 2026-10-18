@@ -78,7 +78,7 @@ export function localDate(ms: number): string {
 
 export function newGameState(now = Date.now()): GameState {
   return {
-    v: 3, savedAt: now, floor: 1, maxFloor: 1, runMaxFloor: 1, gold: '0', floorPoints: 0, crystals: 0, petFood: 0, gems: 0,
+    v: 3, savedAt: now, floor: 1, maxFloor: 1, runMaxFloor: 1, gold: String(economy.rewards.startGold), floorPoints: 0, crystals: 0, petFood: 0, gems: 0,
     resources: { bone: 0, leaf: 0, ore: 0, seal: 0, totem: 0 },
     heroes: { alderic: { lvl: 1, form: 0, pet: 0, artifacts: [], floorsInParty: 0 } },
     party: ['alderic'],

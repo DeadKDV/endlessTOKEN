@@ -77,7 +77,10 @@ export function update(dtMs: number) {
   while (acc >= TICK) {
     acc -= TICK;
     if (dungeon) stepDungeon(b); else step(b);
-    addGold(goldPerSec(s.base.mine ?? 0) * goldMult(s) * TICK / 1000);
+    // золото за убитых - сразу, как в Endless Frontier, а не в конце этажа: новичку есть что тратить с первых секунд
+    const kills = dungeon ? 0 : b.goldEarned;
+    if (kills) b.goldEarned = 0;
+    addGold((goldPerSec(s.base.mine ?? 0) * TICK / 1000 + kills) * goldMult(s));
     if (dungeon && b.finished) { finishDungeon(dungeon, b); return; }
     if (b.finished === 'win') { onFloorWin(b); return; }
     if (b.finished === 'lose') { onFloorLose(b); return; }

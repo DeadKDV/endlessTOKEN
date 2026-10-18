@@ -246,8 +246,9 @@ describe('герои и отряд', () => {
     expect(buyHeroLevels(s, 'alderic', 10).heroes.alderic.lvl).toBe(11);
     const m = buyHeroLevels(s, 'alderic', 'max');
     expect(m.heroes.alderic.lvl).toBeGreaterThan(11);
-    expect(Number(m.gold)).toBeLessThan(15 * Math.pow(1.09, m.heroes.alderic.lvl - 1));
-    expect(buyHeroLevels(mk(), 'alderic')).toEqual(mk());
+    expect(Number(m.gold)).toBeLessThan(3 * Math.pow(1.094, m.heroes.alderic.lvl - 1));
+    const broke = { ...mk(), gold: '0' };
+    expect(buyHeroLevels(broke, 'alderic')).toEqual(broke);
   });
   it('слоты отряда: 1/10/25/50/100 этажи', () => {
     expect([1, 9, 10, 24, 25, 49, 50, 99, 100].map(partySlots)).toEqual([1, 1, 2, 2, 3, 3, 4, 4, 5]);
