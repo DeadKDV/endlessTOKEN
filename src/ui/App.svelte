@@ -23,10 +23,10 @@
 </script>
 
 <div class="top">
-  <span>💰 {fmt(Number($save.gold))}</span>
+  <span>💰 {fmt($save.gold)}</span>
   <span>⭐ {fmt($save.floorPoints)}</span>
-  <span>💎 {$save.gems}</span>
-  <span>🔮 {$save.crystals}</span>
+  <span>💎 {fmt($save.gems)}</span>
+  <span>🔮 {fmt($save.crystals)}</span>
   <button class="gear" aria-label={t.settings.open} title={t.settings.open} onclick={() => settingsOpen.set(true)}>
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
       <circle cx="12" cy="12" r="3.2" />
