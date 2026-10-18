@@ -247,8 +247,9 @@ export class BattleFx {
     const g = this.g, cy = p.y - p.h * 0.5;
     // полный пузырь - только героям и боссам: щит отряда на десятке крипов сливал армию в голубое пятно
     const big = u.kind === 'hero' || u.kind === 'boss';
+    const hero = u.kind === 'hero'; // герои стоят плечом к плечу: пузырь у них меньше и прозрачнее
     const bubble = (color: number, edge: number) => big
-      ? g.ellipse(p.x, cy, p.w * 0.9 + 3, p.h * 0.62).fill({ color, alpha: 0.18 }).stroke({ color: edge, width: 1, alpha: 0.6 })
+      ? g.ellipse(p.x, cy, hero ? p.w * 0.38 + 2 : p.w * 0.9 + 3, p.h * (hero ? 0.55 : 0.62)).fill({ color, alpha: hero ? 0.09 : 0.18 }).stroke({ color: edge, width: 1, alpha: hero ? 0.4 : 0.6 })
       : g.ellipse(p.x, cy, p.w * 0.7 + 2, p.h * 0.55).stroke({ color: edge, width: 1, alpha: 0.35 });
     if ((u.shield ?? 0) > 0) bubble(0x66ccff, 0xaaeeff);
     for (const e of u.effects ?? []) {

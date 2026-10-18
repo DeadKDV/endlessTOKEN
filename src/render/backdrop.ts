@@ -18,15 +18,25 @@ function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => 
 
 const mix = (a: number[], b: number[], t: number) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
 
-function sky(h: number): Texture {
+/** Тон сцены по расе мобов этажа: небо (верх/низ), множитель цвета гор, земли и леса, яркость звёзд. */
+const TONE: Record<string, { top: number[]; low: number[]; tint: number; stars: number }> = {
+  undead: { top: [20, 18, 52], low: [98, 80, 152], tint: 0x8a86c4, stars: 0.8 },
+  elf: { top: [88, 170, 214], low: [204, 238, 190], tint: 0xe4ffd8, stars: 0 },
+  dwarf: { top: [72, 38, 24], low: [228, 152, 66], tint: 0xf0b878, stars: 0.15 },
+  human: { top: [70, 130, 214], low: [192, 216, 238], tint: 0xffffff, stars: 0 },
+  orc: { top: [70, 24, 24], low: [216, 112, 78], tint: 0xe89a88, stars: 0.2 },
+};
+const rgb = (n: number) => [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+
+function sky(h: number, race: string): Texture {
   return canvasTex(W, h, c => {
-    const top = [18, 22, 52], low = [214, 138, 112];
+    const { top, low, stars } = TONE[race] ?? TONE.human;
     const bands = 28;
     for (let b = 0; b < bands; b++) {
       c.fillStyle = mix(top, low, b / (bands - 1));
       c.fillRect(0, Math.floor(b * h / bands), W, Math.ceil(h / bands));
     }
-    for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(255,255,255,${artSet() === 'elthen' ? 0.3 : 0.8})`; c.fillRect(Math.floor(rnd() * W), Math.floor(rnd() * h * 0.5), 1, 1); }
+    if (stars) for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(255,255,255,${artSet() === 'elthen' ? stars * 0.4 : stars})`; c.fillRect(Math.floor(rnd() * W), Math.floor(rnd() * h * 0.5), 1, 1); }
   });
 }
 
@@ -66,19 +76,60 @@ function ground(h: number): Texture {
 
 export class Backdrop extends Container {
   private layers: { s: TilingSprite; f: number }[] = [];
-  constructor(groundY: number, height: number) {
+  private skyBack: TilingSprite;
+  private skyTop: TilingSprite;
+  private skies = new Map<string, Texture>();
+  private forest?: Sprite;
+  private race = '';
+  private fadeAt = 0;
+  private last = 0;
+  private cur = rgb(0xffffff);
+  private to = rgb(0xffffff);
+  constructor(private groundY: number, height: number) {
     super();
     const add = (t: Texture, y: number, f: number) => {
       const s = new TilingSprite({ texture: t, width: W, height: t.height });
       s.y = y;
       this.addChild(s);
       this.layers.push({ s, f });
+      return s;
     };
-    add(sky(groundY), 0, 0);
-    add(mountains(120, '#2a2f55', 110, [1, 2, 5]), groundY - 120, 0.1);
-    add(mountains(70, '#1d3a3a', 60, [2, 3, 7]), groundY - 70, 0.3);
+    this.skyBack = add(this.skyOf('human'), 0, 0);
+    this.skyTop = add(this.skyOf('human'), 0, 0);
+    add(mountains(120, '#58649a', 110, [1, 2, 5]), groundY - 120, 0.1);
+    add(mountains(70, '#3f6a5c', 60, [2, 3, 7]), groundY - 70, 0.3);
     add(ground(height - groundY + 4), groundY - 4, 1);
     if (artSet() === 'elthen') void this.loadForest();
+  }
+
+  private skyOf(race: string) {
+    let t = this.skies.get(race);
+    if (!t) this.skies.set(race, t = sky(this.groundY, race));
+    return t;
+  }
+
+  /** Тон по расе мобов: первый вызов - сразу, дальше небо перетекает за ~1 с, цвета гор/земли/леса - плавно. */
+  setRace(race: string, now: number) {
+    if (race === this.race || !TONE[race]) return;
+    const first = !this.race;
+    this.race = race;
+    this.to = rgb(TONE[race].tint);
+    if (first) this.cur = this.to.slice();
+    this.skyBack.texture = first ? this.skyOf(race) : this.skyTop.texture;
+    this.skyTop.texture = this.skyOf(race);
+    this.skyTop.alpha = first ? 1 : 0;
+    this.fadeAt = now;
+  }
+
+  update(now: number) {
+    const dt = Math.min(100, now - (this.last || now));
+    this.last = now;
+    if (this.skyTop.alpha < 1) this.skyTop.alpha = Math.min(1, (now - this.fadeAt) / 1000);
+    const k = 1 - Math.exp(-dt / 330);
+    this.cur = this.cur.map((v, i) => v + (this.to[i] - v) * k);
+    const tint = (Math.round(this.cur[0]) << 16) | (Math.round(this.cur[1]) << 8) | Math.round(this.cur[2]);
+    this.layers.forEach((l, i) => { if (i > 1) l.s.tint = tint; });
+    if (this.forest) this.forest.tint = tint;
   }
 
   /** Лесной фон Elthen (public/elthen/backdrop.png, не в git): если файла нет - остаётся процедурный. */
@@ -88,8 +139,9 @@ export class Backdrop extends Container {
       if (!(await fetch(url, { method: 'HEAD' })).headers.get('content-type')?.startsWith('image/')) return;
       const t = await Assets.load<Texture>(url);
       t.source.scaleMode = 'nearest';
-      this.layers.forEach((l, i) => { if (i) l.s.visible = false; }); // горы и земля кодом уступают лесу
-      this.addChildAt(new Sprite(t), 1);
+      this.layers.forEach((l, i) => { if (i > 1) l.s.visible = false; }); // горы и земля кодом уступают лесу
+      this.forest = new Sprite(t);
+      this.addChildAt(this.forest, 2);
     } catch { /* нет картинки - рисуем кодом */ }
   }
   /** camX — сдвиг мира в логических пикселях (world.x, отрицательный при движении вправо). */

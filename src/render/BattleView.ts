@@ -53,7 +53,9 @@ const CREEP_TYPE = new Map<string, CreepType>(
 const FADE_MS = 300, FLASH_MS = 110, LUNGE_MS = 160;
 const PET_TINT: Record<string, number> = { elf: 0xb8f0a8, orc: 0x9cd67a, undead: 0xb8b0d8 }; // лиса Elthen перекрашивается по расе героя
 const PET_X = -14, PET_Y = -4;                   // где петомец стоит относительно героя: сзади и чуть выше
-const TEXT_SMALL = { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff };
+const TEXT_SMALL = { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff, stroke: { color: 0x000000, width: 3 } };
+const STEP = 0.6;                                // шаг построения героев по x, клеток
+const HERO_DY = [0, 5, -4, 9, -8];               // глубина героев отряда: первый ближе к камере
 
 interface UnitView {
   root: Container; hp: Graphics; w: number; h: number; kind: Unit['kind']; dx: number; dy: number;
@@ -80,6 +82,7 @@ export class BattleView {
   private views = new Map<number, UnitView>();
   private dying: { v: UnitView; born: number; deb?: { g: Graphics; vx: number; vy: number }[] }[] = [];
   private backdrop = new Backdrop(GROUND_Y, LOGICAL_H);
+  private lastRender = 0;
   private lastHp = new Map<number, number>();
   private ema = new Map<number, number>(); // средний удар по цели: заметно больший считаем критом
   private lastHeal = new Map<number, number>();
@@ -117,6 +120,13 @@ export class BattleView {
   render(s: BattleState) {
     const now = performance.now();
     this.backdrop.scroll(0);
+    const dt = Math.min(100, now - (this.lastRender || now)), kf = 1 - Math.exp(-dt / 220);
+    this.lastRender = now;
+    const run = get(dungeonRun), foes = s.units.filter(u => u.alive && u.side === 'enemy' && u.kind !== 'base');
+    const race = run ? (foes.find(u => u.kind === 'boss') ?? foes[0])?.race : mobRaceForFloor(s.floor);
+    if (race) this.backdrop.setRace(race, now);
+    this.backdrop.update(now);
+    const party = get(save).party;
     const byId = new Map(s.units.map(u => [u.id, u]));
     for (const u of s.units) {
       if (!u.alive || u.pending) continue;
@@ -144,6 +154,10 @@ export class BattleView {
       seen.add(u.id);
       const v = this.views.get(u.id)!;
       if (prev !== undefined && u.hp < prev) { v.flash = now + FLASH_MS; v.hurtAt = now; this.act(v, 'hurt', HURT_MS, now); }
+      if (u.kind === 'hero') { // построение отряда: первый впереди, остальные левее и по глубине; сдвиг плавный
+        const i = Math.max(0, party.indexOf(u.refId));
+        v.dx += (-i * STEP * CELL - v.dx) * kf; v.dy += (HERO_DY[i % HERO_DY.length] - v.dy) * kf;
+      }
       this.animate(v, u, now);
       const px = u.x * CELL;
       // база не вылезает за края экрана
@@ -180,7 +194,6 @@ export class BattleView {
     drawBig(this.ownBaseRow, s, 'party', 'base', 8, 166, t.battleHud.ownBase, 0x44bb55);
     drawBig(this.baseRow, s, 'enemy', 'base', 186, 166, t.battleHud.enemyBase, 0xdd4444);
     // в подземелье и рейде этаж - внутренняя сила мобов, игроку показываем, где он
-    const run = get(dungeonRun);
     this.floorLabel.text = run
       ? tpl(t.battleHud.runWave, { name: run === 'raid' ? t.battleHud.raid : (t.dungeon as Record<string, string>)[run] ?? run, w: s.wave })
       : tpl(t.battleHud.floorWave, { n: s.floor, w: s.wave });
@@ -286,7 +299,7 @@ export class BattleView {
   private updateProjs(now: number, byId: Map<number, Unit>) {
     this.projs = this.projs.filter(p => {
       const t = Math.min(1, (now - p.born) / p.dur);
-      if (!p.fx && byId.get(p.target.id)?.alive) p.x1 = p.target.x * CELL + p.tdx;
+      if (!p.fx && byId.get(p.target.id)?.alive) p.x1 = p.target.x * CELL + (this.views.get(p.target.id)?.dx ?? p.tdx);
       if (p.fx) p.g.alpha = 1 - t;
       const at = (k: number) => [p.x0 + (p.x1 - p.x0) * k, p.y0 + (p.y1 - p.y0) * k - p.arc * Math.sin(Math.PI * k)];
       const [x, y] = at(t), [x2, y2] = at(Math.min(1, t + 0.03));
@@ -385,7 +398,9 @@ export class BattleView {
     const extras = u.kind === 'hero' ? this.heroExtras(u, root, h, form, proto, anim) : {};
     root.addChild(sprite);
     const base = u.kind === 'base';
-    const dy = base ? 0 : ((u.id % ROWS) - 1) * 7, dx = base ? 0 : (((u.id * 5) % 7) - 3) * 1.2; // только визуально
+    const row = (u.id % ROWS) - 1;
+    let dy = base ? 0 : row * 7, dx = base ? 0 : (((u.id * 5) % 7) - 3) * 1.2 + row * 3; // свой ряд по глубине, только визуально
+    if (u.kind === 'hero') { const i = Math.max(0, get(save).party.indexOf(u.refId)); dx = -i * STEP * CELL; dy = HERO_DY[i % HERO_DY.length]; }
     const hp = new Graphics();
     root.addChild(hp);
     this.world.addChild(root);
