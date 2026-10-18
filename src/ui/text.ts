@@ -42,5 +42,7 @@ export function buildingEffectText(b: BuildingDef, level: number): string {
 export function artifactEffectText(a: ArtifactDef, level: number): string {
   const s = (t.dungeonUi.effect as Record<string, string>)[a.effect.kind] ?? a.effect.kind;
   const v = artifactValue(a, Math.max(1, level));
+  if (a.effect.kind === 'party_atk_on_creep_death') return tpl(s, { p: Math.round(v) }); // значение - перезарядка, с
+  if (a.effect.kind === 'pet_ability_cooldown') return tpl(s, { p: Math.round((1 - v) * 100) });
   return tpl(s, { p: a.effect.kind === 'creep_cap_add' ? Math.floor(v) : pct(v) });
 }

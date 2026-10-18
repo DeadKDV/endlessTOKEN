@@ -53,6 +53,19 @@ function addFx(u: Unit, k: string, v: number, until: number, src?: string) {
   if (e) { e.v = v; e.until = until; } else list.push({ k, v, until, src });
 }
 
+/** Артефакт «Сердце мёртвого короля»: гибель своего крипа даёт отряду бафф атаки (с перезарядкой у носителя). */
+function rally(s: BattleState) {
+  const t = s.tick;
+  for (const h of s.units) {
+    if (!h.alive || h.side !== 'party' || !h.abilities) continue;
+    const i = h.abilities.findIndex(a => a.kind === 'rally_on_creep_death');
+    if (i < 0 || !h.cds || h.cds[i] > 0) continue;
+    const a = h.abilities[i];
+    h.cds[i] = sec(a.cooldown ?? 30);
+    for (const u of s.units) if (u.alive && u.side === 'party' && u.kind !== 'base') addFx(u, 'atk', a.value ?? 1.5, t + sec(a.duration ?? 5), 'art:dead_king_heart');
+  }
+}
+
 function addShield(u: Unit, amount: number, until: number) {
   u.shield = (u.shield ?? 0) + amount;
   u.shieldUntil = Math.max(u.shieldUntil ?? 0, until);
@@ -144,6 +157,7 @@ function kill(s: BattleState, v: Unit, killer: Unit | undefined, rnd: () => numb
   const rv = abOf(v, 'revive_self');
   if (rv && !v.revived) { v.revived = true; v.hp = v.maxHp * (rv.value ?? 1); return; }
   v.alive = false;
+  if (v.side === 'party' && v.kind === 'creep' && !v.temp) rally(s);
   if (v.side === 'enemy') {
     if (!v.temp) s.goldEarned += floorGold(s.floor) * 0.6 / (economy.floor.mobsPerWave * WAVES) * (s.goldMult ?? 1);
     if (killer && killer.alive && depth < MAX_DEPTH) {

@@ -9,7 +9,7 @@ import economy from '../data/economy.json';
 import { creepCap, heroAtk, heroHp } from './economy';
 import { partyBonus } from './races';
 import { crystalMult } from './prestige';
-import { heroArtifactSum } from './artifacts';
+import { artifactById, heroArtifactSum } from './artifacts';
 import { villageMods } from './buildings';
 import type { PartyMember } from './battle';
 import type { Ability, CreepType, GameState, Race, Stats } from './types';
@@ -68,6 +68,16 @@ export function buildParty(s: GameState): PartyMember[] {
     }
     const abilities = h.forms.slice(0, sv.form + 1).flatMap(f => f.abilities as unknown as Ability[]);
     if (sv.pet >= 5) abilities.push(h.pet.passive as unknown as Ability);
+    // Тотем духов: перезарядка способностей петомца (пассивка и способность формы «Союз») короче
+    const petCd = a('pet_ability_cooldown') || 1;
+    const fromPet = new Set<unknown>([h.pet.passive, ...(sv.form >= 2 ? h.forms[2].abilities : [])]);
+    for (let i = 0; i < abilities.length; i++) if (fromPet.has(abilities[i]) && abilities[i].cooldown) abilities[i] = { ...abilities[i], cooldown: abilities[i].cooldown! * petCd };
+    // Сердце мёртвого короля: скрытая способность, срабатывает в abilities.kill при гибели своего крипа
+    const rally = a('party_atk_on_creep_death');
+    if (rally > 0) {
+      const art = artifactById('dead_king_heart')!.effect as unknown as { mult: number; duration: number };
+      abilities.push({ id: 'dead_king_heart', name: artifactById('dead_king_heart')!.name, kind: 'rally_on_creep_death', value: art.mult, duration: art.duration, cooldown: rally });
+    }
     return { heroId: id, race: h.race as Race, stats, creeps, abilities };
   });
 }

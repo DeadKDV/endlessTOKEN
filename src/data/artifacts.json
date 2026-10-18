@@ -7,7 +7,7 @@
     { "id": "skull_lich",     "branch": "crypt", "resource": "bone", "name": { "ru": "Череп лича", "en": "Lich Skull" },                "effect": { "kind": "hero_atk",   "atLevel1": 0.10, "atLevel50": 5.0 } },
     { "id": "bone_knuckles",  "branch": "crypt", "resource": "bone", "name": { "ru": "Костяной кастет", "en": "Bone Knuckles" },        "effect": { "kind": "infantry_atk", "atLevel1": 0.08, "atLevel50": 4.0 } },
     { "id": "femur_arrow",    "branch": "crypt", "resource": "bone", "name": { "ru": "Стрела из бедренной кости", "en": "Femur Arrow" }, "effect": { "kind": "ranged_atk", "atLevel1": 0.08, "atLevel50": 4.0 } },
-    { "id": "dead_king_heart","branch": "crypt", "resource": "bone", "name": { "ru": "Сердце мёртвого короля", "en": "Dead King's Heart" }, "effect": { "kind": "party_atk_on_creep_death", "mult": 1.5, "duration": 5, "cooldownAtLevel1": 30, "cooldownAtLevel50": 10 } },
+    { "id": "dead_king_heart","branch": "crypt", "resource": "bone", "name": { "ru": "Сердце мёртвого короля", "en": "Dead King's Heart" }, "effect": { "kind": "party_atk_on_creep_death", "mult": 1.5, "duration": 5, "atLevel1": 30, "atLevel50": 10 } },
 
     { "id": "moon_quiver",    "branch": "grove", "resource": "leaf", "name": { "ru": "Лунный колчан", "en": "Moon Quiver" },           "effect": { "kind": "hero_atk_speed", "atLevel1": 0.05, "atLevel50": 1.5 } },
     { "id": "leaf_blade",     "branch": "grove", "resource": "leaf", "name": { "ru": "Листовой клинок", "en": "Leaf Blade" },          "effect": { "kind": "infantry_atk_speed", "atLevel1": 0.05, "atLevel50": 1.2 } },
