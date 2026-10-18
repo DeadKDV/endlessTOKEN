@@ -5,6 +5,7 @@
     "healer":   { "hp": 55,  "atk": 3,  "range": 5, "moveSpeed": 0.9, "atkSpeed": 1.0, "heal": 6, "behavior": "heal_lowest_pct" }
   },
   "levelGrowth": 1.06,
+  "heroLevelShare": 0.85,
   "defaultMix": { "infantry": 0.5, "ranged": 0.3, "healer": 0.2 },
   "creeps": [
     { "id": "undead_infantry", "race": "undead", "type": "infantry", "name": { "ru": "Скелет-воин", "en": "Skeleton Warrior" }, "visual": "Ржавый щит, обломок меча, пустые глазницы светятся синим", "sprite": "assets/sprites/undead/creep_infantry.png" },

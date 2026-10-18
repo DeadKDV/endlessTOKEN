@@ -46,7 +46,9 @@ export function buildParty(s: GameState): PartyMember[] {
     };
     const cap = creepCap(sv.form, sv.pet, s.village.banner ?? 0, Math.floor(a('creep_cap_add')));
     const lvl = s.village[`barracks_${h.race}`] ?? 0;
-    const g = Math.pow(creepsData.levelGrowth, lvl) * bonus.creepMult * cm * (1 + a('creep_all_stats')) * tough;
+    // крипы растут вместе с уровнем героя (чуть медленнее), казармы - множитель сверху: иначе к 20-му этажу они бумажные
+    const lead = Math.pow(heroAtk(1, sv.lvl, 0) / heroAtk(1, 1, 0), creepsData.heroLevelShare);
+    const g = lead * Math.pow(creepsData.levelGrowth, lvl) * bonus.creepMult * cm * (1 + a('creep_all_stats')) * tough;
     const creeps: PartyMember['creeps'] = [];
     const mix = s.creepMix;
     const counts: Record<CreepType, number> = {
