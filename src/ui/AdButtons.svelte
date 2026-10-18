@@ -2,6 +2,8 @@
   // Четыре рекламные кнопки. Провайдер stub показывает экран "RVPower" и выдаёт награду.
   import { save, addGold, track } from '../game';
   import { floorGold } from '../sim/economy';
+  import { localDate } from '../sim/party';
+  import type { GameState } from '../sim/types';
   import economy from '../data/economy.json';
   import { t } from './text';
   import { get } from 'svelte/store';
@@ -11,13 +13,17 @@
   let now = $state(Date.now());
   $effect(() => { const i = setInterval(() => (now = Date.now()), 1000); return () => clearInterval(i); });
   const mmss = (ms: number) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  // дневные лимиты сбрасываются в местную полночь, как подземелья
+  const fresh = (ad: GameState['ads'], ms: number): GameState['ads'] => ad.day === localDate(ms) ? ad : { ...ad, resourcesToday: 0, gemsToday: 0, day: localDate(ms) };
+  const cd = (at: number | undefined, min: number) => Math.max(0, (at ?? 0) + min * 60e3 - now);
   const items = $derived.by(() => {
-    const ad = $save.ads, speedLeft = ad.speedUntil - now, boostLeft = ad.boostUntil - now;
+    const ad = fresh($save.ads, now), speedLeft = ad.speedUntil - now, boostLeft = ad.boostUntil - now;
+    const speedCd = cd(ad.speedAt, A.speed.cooldownMin), boostCd = cd(ad.boostAt, A.boost.cooldownMin);
     return [
-      { k: 'speed' as const, label: t.ads.speedS, full: t.ads.speed, left: speedLeft, off: false, state: speedLeft > 0 ? mmss(speedLeft) : '×2' },
+      { k: 'speed' as const, label: t.ads.speedS, full: t.ads.speed, left: speedLeft, off: speedCd > 0, state: speedLeft > 0 ? mmss(speedLeft) : speedCd > 0 ? mmss(speedCd) : '×2' },
       { k: 'resources' as const, label: t.ads.resourcesS, full: t.ads.resources, left: 0, off: ad.resourcesToday >= A.resources.perDay, state: `${A.resources.perDay - ad.resourcesToday}/${A.resources.perDay}` },
       { k: 'gems' as const, label: t.ads.gemsS, full: t.ads.gems, left: 0, off: ad.gemsToday >= A.gems.perDay, state: `${A.gems.perDay - ad.gemsToday}/${A.gems.perDay}` },
-      { k: 'boost' as const, label: t.ads.boostS, full: t.ads.boost, left: boostLeft, off: false, state: boostLeft > 0 ? mmss(boostLeft) : '+5%' },
+      { k: 'boost' as const, label: t.ads.boostS, full: t.ads.boost, left: boostLeft, off: boostCd > 0, state: boostLeft > 0 ? mmss(boostLeft) : boostCd > 0 ? mmss(boostCd) : '+5%' },
     ];
   });
 
@@ -28,9 +34,10 @@
     showing = null;
     track({ adsWatched: 1 });
     const now = Date.now();
+    save.update(x => ({ ...x, ads: fresh(x.ads, now) }));
     const s = get(save);
-    if (kind === 'speed') save.update(x => ({ ...x, ads: { ...x.ads, speedUntil: Math.min(Math.max(now, x.ads.speedUntil) + A.speed.durationMin * 60e3, now + A.speed.maxStackMin * 60e3) } }));
-    if (kind === 'boost') save.update(x => ({ ...x, ads: { ...x.ads, boostUntil: now + A.boost.durationMin * 60e3 } }));
+    if (kind === 'speed') save.update(x => ({ ...x, ads: { ...x.ads, speedAt: now, speedUntil: Math.min(Math.max(now, x.ads.speedUntil) + A.speed.durationMin * 60e3, now + A.speed.maxStackMin * 60e3) } }));
+    if (kind === 'boost') save.update(x => ({ ...x, ads: { ...x.ads, boostAt: now, boostUntil: now + A.boost.durationMin * 60e3 } }));
     if (kind === 'gems') save.update(x => ({ ...x, gems: x.gems + A.gems.gems, ads: { ...x.ads, gemsToday: x.ads.gemsToday + 1 } }));
     if (kind === 'resources') { addGold(floorGold(s.floor) * A.resources.goldHoursOfFloor * 360); save.update(x => ({ ...x, floorPoints: x.floorPoints + A.resources.floorPoints, ads: { ...x.ads, resourcesToday: x.ads.resourcesToday + 1 } })); }
   }

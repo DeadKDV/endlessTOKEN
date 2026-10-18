@@ -117,5 +117,5 @@ export interface GameState {
   base: Record<string, number>;
   creepMix: Record<CreepType, number>;
   dungeonRuns: { date: string; [dungeon: string]: string | number };
-  ads: { speedUntil: number; boostUntil: number; resourcesToday: number; gemsToday: number; day: string };
+  ads: { speedUntil: number; boostUntil: number; resourcesToday: number; gemsToday: number; day: string; speedAt?: number; boostAt?: number };
 }
