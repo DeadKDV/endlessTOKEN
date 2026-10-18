@@ -16,6 +16,9 @@ import { applyPrestige, buyPermGold, claimStarterPack, goldMult } from './sim/pr
 import {
   createDungeonBattle, dungeonReward, dungeonUnlocked, grantDungeonReward, resetRuns, runsLeft, spendRun, stepDungeon,
 } from './sim/dungeons';
+import {
+  RAID_ID, createRaidBattle, raidDamage, raidEntriesLeft, raidTiers, settleRaid, spendRaidEntry, stepRaid, type RaidResult,
+} from './sim/raid';
 import { claimAchievement, claimChest, claimDaily, recordEvent, type Stats } from './sim/quests';
 import { loadLocal, saveLocal } from './save/storage';
 import { autoAdvanceOn } from './save/autoAdvance';
@@ -41,6 +44,8 @@ export const prestigeAsk = writable(false);
 /** Герой, только что призванный (попап-раскрытие). */
 export const summonReveal = writable<string | null>(null);
 export const dungeonRun = writable<string | null>(null);
+/** Итог захода в рейд дня (попап). */
+export const raidResult = writable<RaidResult | null>(null);
 export const dungeonResult = writable<{ id: string; waves: number; amount: number } | null>(null);
 
 /** Короткое всплывающее сообщение (id растёт, чтобы повтор того же текста показывался заново). */
@@ -78,12 +83,12 @@ export function update(dtMs: number) {
   const dungeon = get(dungeonRun);
   while (acc >= TICK) {
     acc -= TICK;
-    if (dungeon) stepDungeon(b); else step(b);
+    if (dungeon === RAID_ID) stepRaid(b); else if (dungeon) stepDungeon(b); else step(b);
     // золото за убитых - сразу, как в Endless Frontier, а не в конце этажа: новичку есть что тратить с первых секунд
     const kills = dungeon ? 0 : b.goldEarned;
     if (kills) b.goldEarned = 0;
     addGold((goldPerSec(s.base.mine ?? 0) * TICK / 1000 + kills) * goldMult(s));
-    if (dungeon && b.finished) { finishDungeon(dungeon, b); return; }
+    if (dungeon && b.finished) { if (dungeon === RAID_ID) finishRaid(b); else finishDungeon(dungeon, b); return; }
     if (b.finished === 'win') { onFloorWin(b); return; }
     if (b.finished === 'lose') { onFloorLose(b); return; }
   }
@@ -133,6 +138,13 @@ function finishDungeon(id: string, b: BattleState) {
   save.update(s => grantDungeonReward(s, id, amount));
   track({ dungeonsRun: 1 });
   dungeonResult.set({ id, waves: b.wave - 1, amount });
+  dungeonRun.set(null);
+  startFloor();
+}
+
+function finishRaid(b: BattleState) {
+  const done = settleRaid(get(save), raidDamage(b), raidTiersAtStart, raidStartMs);
+  if (done) { save.set(done.state); raidResult.set(done.result); track({ raidsRun: 1 }); }
   dungeonRun.set(null);
   startFloor();
 }
@@ -199,4 +211,17 @@ export function enterDungeon(id: string) {
   save.set(spendRun(s, id, now));
   dungeonRun.set(id);
   battle.set(createDungeonBattle(s, id, buildParty(s), now & 0xffffffff));
+}
+
+let raidTiersAtStart: number[] = [];
+let raidStartMs = 0;
+/** Войти в рейд дня: списывает заход и запускает 60-секундный бой с боссом на той же сцене. Ступени наград фиксируются на старте. */
+export function enterRaid() {
+  const s = get(save); const now = Date.now();
+  if (get(dungeonRun) || raidEntriesLeft(s, now) <= 0) return;
+  const party = buildParty(s);
+  raidTiersAtStart = raidTiers(party); raidStartMs = now;
+  save.set(spendRaidEntry(s, now));
+  dungeonRun.set(RAID_ID);
+  battle.set(createRaidBattle(s, party, now & 0xffffffff, now));
 }

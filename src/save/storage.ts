@@ -23,6 +23,11 @@ const migrations: Record<number, (s: any) => any> = {
   4: s => ({ ...s, v: 5, quests: newQuests() }),
   // v5 → v6: прогресс обучения; кто уже играл (этаж, второй герой, золото, стартовый набор) — обучение пропущено
   5: s => ({ ...s, v: 6, tutorial: s.maxFloor > 1 || Object.keys(s.heroes ?? {}).length > 1 || Number(s.gold) > economy.rewards.startGold || s.perks?.starterPack ? { done: [], skipped: true } : { done: [] } }),
+  // v6 → v7: рейд дня (заходы, дневной лучший урон, рекорд); в счётчики заданий добавлен raidsRun
+  6: s => ({
+    ...s, v: 7, raid: { date: '', used: 0, best: 0, record: 0, pending: false },
+    quests: s.quests && { ...s.quests, stats: { ...s.quests.stats, raidsRun: 0 }, dayStats: { ...s.quests.dayStats, raidsRun: 0 } },
+  }),
 };
 
 export function migrate(s: any): GameState {

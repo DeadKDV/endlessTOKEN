@@ -7,7 +7,8 @@
     "levels":    [{ "target": 20, "gems": 5 }, { "target": 40, "gems": 8 }, { "target": 80, "gems": 12 }],
     "buildings": [{ "target": 3, "goldMin": 20 }, { "target": 6, "goldMin": 35 }],
     "ads":       [{ "target": 1, "gems": 5 }, { "target": 2, "gems": 10 }],
-    "dungeons":  [{ "target": 1, "petFood": 8 }, { "target": 2, "petFood": 15 }]
+    "dungeons":  [{ "target": 1, "petFood": 8 }, { "target": 2, "petFood": 15 }],
+    "raids":     [{ "target": 1, "gems": 10 }, { "target": 2, "petFood": 12 }]
   },
   "achievements": [
     { "id": "maxFloor",       "stat": "maxFloor",       "steps": [10, 25, 50, 100, 200, 400, 800], "gems": [10, 20, 30, 50, 80, 120, 200] },

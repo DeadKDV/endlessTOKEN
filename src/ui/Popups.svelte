@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { save, offlinePopup, eggPopup, dungeonResult, prestigeAsk, prestige, summonReveal, togglePartyAction } from '../game';
+  import { save, offlinePopup, eggPopup, dungeonResult, raidResult, prestigeAsk, prestige, summonReveal, togglePartyAction } from '../game';
   import { partySlots } from '../sim/heroes';
   import HeroPortrait from './HeroPortrait.svelte';
   import { heroById } from '../sim/party';
   import { prestigeGain } from '../sim/prestige';
   import { fmt } from './format';
+  import { rewardText } from './raidText';
+  import economy from '../data/economy.json';
   import { t, tpl, nm } from './text';
 </script>
 
@@ -51,9 +53,25 @@
     <p>{tpl(t.dungeonUi.resultGain, { n: $dungeonResult.amount })}</p>
     <button onclick={() => dungeonResult.set(null)}>{t.action.collect}</button>
   </div>
+{:else if $raidResult}
+  {@const r = $raidResult}
+  <div class="modal">
+    <h3>{t.raidDay.resultTitle}</h3>
+    <p>{tpl(t.raidDay.boss, { race: t.race[r.race] })}</p>
+    <p>{tpl(t.raidDay.resultDamage, { n: fmt(r.damage) })}</p>
+    {#if r.newRecord}<p class="rec">{t.raidDay.newRecord}</p>{/if}
+    {#if r.tier > 0}
+      <p>{tpl(t.raidDay.resultTier, { n: r.tier, max: economy.guild.raid.tierMult.length })}</p>
+      <p>{t.raidDay.resultGain} {[r.reward.petFood && `${t.currency.petFood} +${r.reward.petFood}`, r.reward.gems && `${t.currency.gems} +${r.reward.gems}`, r.reward.crystals && `${t.currency.crystals} +${r.reward.crystals}`].filter(Boolean).join(' · ')}</p>
+    {:else}
+      <p class="muted">{t.raidDay.resultNone}</p>
+    {/if}
+    <button onclick={() => raidResult.set(null)}>{t.action.collect}</button>
+  </div>
 {/if}
 
 <style>
+  .rec { color: #ffd54f; }
   .modal { position: absolute; inset: 30% 10%; z-index: 30; background: #1a1a2e; border: 2px solid #ffd54f; border-radius: 8px; padding: 16px; color: #fff; text-align: center; font: 14px monospace; }
   .reveal { position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: rgba(5, 5, 14, 0.92); color: #fff; font: 14px monospace; animation: fade 0.3s ease-out; }
   .reveal h3 { margin: 0; color: #ffd54f; }

@@ -1,10 +1,10 @@
-# Формат сейва (v6)
+# Формат сейва (v7)
 
 `GameState` из `src/sim/types.ts`. Хранится в localStorage (`rv-tycoon.save.v1`, JSON → lz-string base64) и в `saves.state` (jsonb) в Supabase. Золото — строка (Decimal), остальное — числа.
 
 ```json
 {
-  "v": 6,
+  "v": 7,
   "savedAt": 1760712000000,
   "floor": 137, "maxFloor": 212, "runMaxFloor": 150,
   "gold": "4.21e19", "floorPoints": 3840, "crystals": 95, "petFood": 12, "gems": 40,
@@ -14,6 +14,7 @@
   "perks": { "permGold": false, "starterPack": true },
   "autoAdvance": true,
   "quests": { "stats": { "floorsCleared": 310, "bossesKilled": 30, "levelsBought": 2400, "buildingLevels": 180, "prestiges": 2, "dungeonsRun": 9, "adsWatched": 14 }, "day": "2026-10-17", "dayStats": { "floorsCleared": 12, "bossesKilled": 1, "levelsBought": 40, "buildingLevels": 0, "prestiges": 0, "dungeonsRun": 0, "adsWatched": 1 }, "daily": ["floors:1", "bosses:0", "levels:1", "ads:0", "buildings:1"], "dailyClaimed": ["floors:1"], "chestClaimed": false, "ach": { "maxFloor": 4, "heroes": 2 } },
+  "raid": { "date": "2026-10-17", "used": 2, "best": 3200000, "record": 5100000, "pending": false },
   "tutorial": { "done": ["level", "stay"], "skipped": false },
   "dailyFoodDay": "2026-10-17",
   "party": ["morven", "groul", "silva", "valtor", "mortis"],
@@ -54,3 +55,8 @@
 - `tutorial` (поле опционально, тип — в `src/ui/tutorial.ts`): `done` — id закрытых подсказок обучения (`level`, `stay`, `village`, `quests`, `pet`, `prestige`), `skipped` — «Пропустить обучение» (подсказки больше не показываются). Нет поля = обучение не начато. Условия показа — в `TUTORIAL_STEPS`.
 - Миграция `migrations[5]`: если игрок уже играл (`maxFloor > 1`, больше одного героя, золото > 0 или взят стартовый набор) — `{ done: [], skipped: true }`, иначе `{ done: [] }`. `newGameState()` по-прежнему отдаёт v3 и проходит через `migrate`, поэтому новая игра получает пустой прогресс.
 - Прогресс в сейве, а не в localStorage: он едет вместе с облаком и импортом, а миграция отличает ветерана от новичка.
+
+## Изменения v6 → v7
+- `raid` (поле опционально, тип — `RaidSave` в `src/sim/raid.ts`): рейд дня. `date` — локальная дата, к которой относятся `used` (заходов потрачено из 3) и `best` (лучший урон за заход сегодня); при смене даты (`raidToday`) они считаются нулевыми. `record` — лучший урон за заход за всё время, не сбрасывается. `pending` — заход начат и ещё не засчитан: `settleRaid` выдаёт награду только при `pending: true` и сбрасывает флаг, поэтому награда один раз за заход.
+- `quests.stats.raidsRun` / `quests.dayStats.raidsRun` — счётчик заходов в рейд (ежедневное задание «Сходить в рейд», вид `raids` в `quests.json`).
+- Миграция `migrations[6]`: `raid` = нули (`date: ''`), `raidsRun: 0` в счётчиках заданий (если `quests` уже есть).

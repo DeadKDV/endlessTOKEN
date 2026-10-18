@@ -6,13 +6,13 @@ import { floorGold } from './economy';
 import type { GameState } from './types';
 
 /** Счётчики событий. Лучший этаж и число героев берутся прямо из сейва (maxFloor, heroes). */
-export const STAT_KEYS = ['floorsCleared', 'bossesKilled', 'levelsBought', 'buildingLevels', 'prestiges', 'dungeonsRun', 'adsWatched'] as const;
+export const STAT_KEYS = ['floorsCleared', 'bossesKilled', 'levelsBought', 'buildingLevels', 'prestiges', 'dungeonsRun', 'adsWatched', 'raidsRun'] as const;
 export type StatKey = (typeof STAT_KEYS)[number];
 export type Stats = Record<StatKey, number>;
 
 /** Виды заданий и счётчик, которым они меряются. */
 export const DAILY_STAT: Record<string, StatKey> = {
-  floors: 'floorsCleared', bosses: 'bossesKilled', levels: 'levelsBought', buildings: 'buildingLevels', ads: 'adsWatched', dungeons: 'dungeonsRun',
+  floors: 'floorsCleared', bosses: 'bossesKilled', levels: 'levelsBought', buildings: 'buildingLevels', ads: 'adsWatched', dungeons: 'dungeonsRun', raids: 'raidsRun',
 };
 
 export interface Reward { gems?: number; petFood?: number; goldMin?: number }
@@ -57,7 +57,7 @@ export function syncQuests(s: GameState, nowMs: number): GameState {
 /** Записать события (например { floorsCleared: 1 }) в общие и дневные счётчики. */
 export function recordEvent(s: GameState, nowMs: number, ev: Partial<Stats>): GameState {
   const n = syncQuests(s, nowMs); const q = n.quests!;
-  const add = (st: Stats) => Object.fromEntries(STAT_KEYS.map(k => [k, st[k] + (ev[k] ?? 0)])) as Stats;
+  const add = (st: Stats) => Object.fromEntries(STAT_KEYS.map(k => [k, (st[k] ?? 0) + (ev[k] ?? 0)])) as Stats;
   return { ...n, quests: { ...q, stats: add(q.stats), dayStats: add(q.dayStats) } };
 }
 
@@ -65,7 +65,7 @@ export function dailyQuests(s: GameState): DailyQuest[] {
   const q = s.quests; if (!q) return [];
   return q.daily.map(id => {
     const [kind, i] = id.split(':'); const tier = tierOf(kind, Number(i));
-    const progress = Math.min(tier.target, q.dayStats[DAILY_STAT[kind]]);
+    const progress = Math.min(tier.target, q.dayStats[DAILY_STAT[kind]] ?? 0);
     return { id, kind, target: tier.target, reward: { gems: tier.gems, petFood: tier.petFood, goldMin: tier.goldMin }, progress, done: progress >= tier.target, claimed: q.dailyClaimed.includes(id) };
   });
 }

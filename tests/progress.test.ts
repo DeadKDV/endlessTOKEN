@@ -325,7 +325,7 @@ describe('миграция сейва', () => {
       dungeonRuns: { date: '2026-10-17' }, ads: { speedUntil: 0, boostUntil: 0, resourcesToday: 0, gemsToday: 0, day: '2026-10-17' },
     };
     const s = deserialize(LZString.compressToBase64(JSON.stringify(v1)));
-    expect(s.v).toBe(6);
+    expect(s.v).toBe(7);
     expect(s.autoAdvance).toBe(true);
     expect(s.runMaxFloor).toBe(42);
     expect(s.artifacts).toEqual({});
@@ -339,13 +339,13 @@ describe('миграция сейва', () => {
     const { v, perks, ...rest } = mk();
     const v2 = { ...rest, v: 2, perks: { permGold: true }, gems: 7 };
     const s = deserialize(LZString.compressToBase64(JSON.stringify(v2)));
-    expect(s.v).toBe(6);
+    expect(s.v).toBe(7);
     expect(s.perks).toEqual({ permGold: true, starterPack: false });
     expect(s.gems).toBe(7);
   });
   it('v3 → v4: авто-проход включён, остальное сохранено', () => {
     const s = deserialize(LZString.compressToBase64(JSON.stringify({ ...mk(), v: 3, floor: 17 })));
-    expect(s.v).toBe(6); expect(s.autoAdvance).toBe(true); expect(s.floor).toBe(17);
+    expect(s.v).toBe(7); expect(s.autoAdvance).toBe(true); expect(s.floor).toBe(17);
   });
   it('v5 не трогается, выключенный авто-проход переживает сериализацию', () => {
     const s = migrate(mk());

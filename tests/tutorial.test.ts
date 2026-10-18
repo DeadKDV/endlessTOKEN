@@ -12,14 +12,14 @@ const id = (s: ReturnType<typeof fresh>) => nextTutorialStep(s)?.id;
 describe('миграция v5 → v6', () => {
   it('новая игра получает пустой прогресс обучения, v = 6', () => {
     const s = fresh();
-    expect(s.v).toBe(6);
+    expect(s.v).toBe(7);
     expect(s.tutorial).toEqual({ done: [] });
   });
   it('старый сейв (этаж > 1 / золото / второй герой) обучение пропускает', () => {
     const old = (patch: object) => migrate({ ...newGameState(0), v: 5, quests: undefined, ...patch });
     for (const p of [{ maxFloor: 7 }, { gold: '1200' }, { heroes: { ...newGameState(0).heroes, groul: { lvl: 1, form: 0, pet: 0, artifacts: [], floorsInParty: 0 } } }]) {
       const s = old(p);
-      expect(s.v).toBe(6);
+      expect(s.v).toBe(7);
       expect(s.tutorial?.skipped).toBe(true);
       expect(nextTutorialStep(s)).toBeUndefined();
     }

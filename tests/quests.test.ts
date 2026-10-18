@@ -9,7 +9,7 @@ import { deserialize, migrate } from '../src/save/storage';
 const D1 = new Date(2026, 9, 17, 12).getTime();
 const D2 = new Date(2026, 9, 18, 0, 5).getTime();
 const mk = () => migrate(newGameState(D1));
-const finishAll = (s: ReturnType<typeof mk>, now: number) => recordEvent(s, now, { floorsCleared: 99, bossesKilled: 99, levelsBought: 999, buildingLevels: 99, adsWatched: 9, dungeonsRun: 9 });
+const finishAll = (s: ReturnType<typeof mk>, now: number) => recordEvent(s, now, { floorsCleared: 99, bossesKilled: 99, levelsBought: 999, buildingLevels: 99, adsWatched: 9, dungeonsRun: 9, raidsRun: 9 });
 
 describe('ежедневные задания', () => {
   it('генерация детерминирована по дате: 5 разных видов; без портала нет подземелья', () => {
@@ -91,7 +91,7 @@ describe('сейв v5', () => {
   it('миграция v4 → v5: quests добавлены, остальное цело', () => {
     const v4 = { ...newGameState(D1), v: 4, autoAdvance: false, floor: 21, gems: 7 };
     const s = deserialize(LZString.compressToBase64(JSON.stringify(v4)));
-    expect(s.v).toBe(6);
+    expect(s.v).toBe(7);
     expect(s.floor).toBe(21); expect(s.gems).toBe(7); expect(s.autoAdvance).toBe(false);
     expect(s.quests!.stats.floorsCleared).toBe(0);
     expect(s.quests!.ach).toEqual({});
