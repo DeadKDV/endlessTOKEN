@@ -30,8 +30,8 @@ const FIELD_R = BASE_X + 1;                     // база прижата к п
 const CELL = LOGICAL_W / (FIELD_R - FIELD_L);   // пикселей на клетку: поле целиком на экране
 import { GROUND_Y } from './layout';
 const POPUP_MS = 800;
-const PROTO_H: Record<Unit['kind'], number> = { hero: 56, creep: 32, mob: 38, boss: 84, base: 0 }; // рост прото-юнита, px (крип ~57% героя; базы - здания в коде)
-const PROC_SCALE: Record<Unit['kind'], number> = { hero: 2, creep: 1.7, mob: 1.9, boss: 1.6, base: 1.4 }; // масштаб процедурных спрайтов
+const PROTO_H: Record<Unit['kind'], number> = { hero: 78, creep: 45, mob: 53, boss: 118, base: 0 }; // рост прото-юнита, px (крип ~57% героя; базы - здания в коде)
+const PROC_SCALE: Record<Unit['kind'], number> = { hero: 2.8, creep: 2.4, mob: 2.7, boss: 2.2, base: 2 }; // масштаб процедурных спрайтов
 type ProjType = 'arrow' | 'bullet' | 'cannon' | 'orb' | 'heal';
 const PROJ: Record<ProjType, { speed: number; arc: number }> = {
   arrow: { speed: 14, arc: 12 }, bullet: { speed: 34, arc: 0 }, cannon: { speed: 9, arc: 24 }, orb: { speed: 14, arc: 3 }, heal: { speed: 12, arc: 3 },

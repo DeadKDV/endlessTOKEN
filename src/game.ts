@@ -56,7 +56,9 @@ export function boot() {
   const p = buildParty(s);
   const rate = goldMult(s) * (1 + partyArtifactSum(s, 'offline_rate'));
   const off = computeOffline(Date.now(), s.savedAt, s.floor, estimateFloorSeconds(s.floor, partyDps(p), totalFloorHp(s.floor)), s.base.mine ?? 0, s.base.storage ?? 0, rate);
-  if (off.gold > 1) { addGold(off.gold); offlinePopup.set(off); }
+  // попап только после настоящей отлучки; за пару минут доход зачисляем молча
+  if (off.gold > 0) addGold(off.gold);
+  if (off.gold > 1 && off.seconds >= 300) offlinePopup.set(off);
   startFloor();
   setInterval(() => saveLocal(get(save)), 10_000);
 }
