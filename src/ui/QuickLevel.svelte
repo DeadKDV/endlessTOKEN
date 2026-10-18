@@ -8,7 +8,8 @@
   import HeroPortrait from './HeroPortrait.svelte';
   import HoldButton from './HoldButton.svelte';
   import { fmt } from './format';
-  import { t, tpl } from './text';
+  import { t, tpl, nm } from './text';
+  import { heroById } from '../sim/party';
 
   const MODES: { v: number | 'max'; label: string }[] = [{ v: 1, label: t.hero.x1 }, { v: 10, label: t.hero.x10 }, { v: 'max', label: t.hero.xmax }];
   let mode = $state<number | 'max'>(1);
@@ -32,7 +33,7 @@
         <HeroPortrait heroId={id} form={h.form} size={40} />
         <span class="muted">{tpl(t.level, { n: h.lvl })}</span>
         <span class="cost">{fmt(p.cost)}</span>
-        <HoldButton label={t.progress.quickUp} disabled={!p.ok} onpress={() => levelUpHero(id, mode)}>▲</HoldButton>
+        <HoldButton label={tpl(t.progress.quickUp, { name: nm(heroById(id)?.name), mode: MODES.find(m => m.v === mode)?.label ?? '' })} disabled={!p.ok} onpress={() => levelUpHero(id, mode)}>▲</HoldButton>
       </div>
     {/if}
   {/each}

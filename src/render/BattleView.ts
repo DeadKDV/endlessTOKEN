@@ -9,7 +9,7 @@ import { AnimatedSprite, Application, Assets, Container, Graphics, Sprite, Sprit
 import { get } from 'svelte/store';
 import type { BattleState, CreepType, Role, Unit } from '../sim/types';
 import { BASE_X } from '../sim/battle';
-import { save } from '../game';
+import { save, dungeonRun } from '../game';
 import { procSprite, type ProcTex } from './procSprites';
 import { Backdrop } from './backdrop';
 import { artIndex } from './artSet';
@@ -179,7 +179,11 @@ export class BattleView {
     drawBig(this.bossRow, s, 'enemy', 'boss', 8, 344, t.battleHud.boss, 0xdd4444);
     drawBig(this.ownBaseRow, s, 'party', 'base', 8, 166, t.battleHud.ownBase, 0x44bb55);
     drawBig(this.baseRow, s, 'enemy', 'base', 186, 166, t.battleHud.enemyBase, 0xdd4444);
-    this.floorLabel.text = tpl(t.battleHud.floorWave, { n: s.floor, w: s.wave });
+    // в подземелье и рейде этаж - внутренняя сила мобов, игроку показываем, где он
+    const run = get(dungeonRun);
+    this.floorLabel.text = run
+      ? tpl(t.battleHud.runWave, { name: run === 'raid' ? t.battleHud.raid : (t.dungeon as Record<string, string>)[run] ?? run, w: s.wave })
+      : tpl(t.battleHud.floorWave, { n: s.floor, w: s.wave });
   }
 
   private async loadAtlases() {
@@ -523,7 +527,7 @@ export class BattleView {
     const pv = this.views.get(u.id);
     const h = pv?.h ?? dims(u).h;
     const t = new Text({
-      text: kind === 'heal' ? `+${n}` : kind === 'crit' ? `${n}!` : kind === 'base' ? `-${n}` : String(n),
+      text: kind === 'heal' ? `+${fmt(n)}` : kind === 'crit' ? `${fmt(n)}!` : kind === 'base' ? `-${fmt(n)}` : fmt(n),
       style: {
         fontFamily: 'monospace', fontWeight: kind === 'dmg' ? 'normal' : 'bold', stroke: { color: 0x000000, width: kind === 'crit' ? 3 : 2 },
         fontSize: kind === 'crit' ? 18 : kind === 'base' ? 15 : 12,

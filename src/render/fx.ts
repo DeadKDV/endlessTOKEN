@@ -245,10 +245,15 @@ export class BattleFx {
     const p = this.pos(u.id);
     if (!p) return;
     const g = this.g, cy = p.y - p.h * 0.5;
-    if ((u.shield ?? 0) > 0) g.ellipse(p.x, cy, p.w * 0.9 + 3, p.h * 0.62).fill({ color: 0x66ccff, alpha: 0.18 }).stroke({ color: 0xaaeeff, width: 1, alpha: 0.6 });
+    // полный пузырь - только героям и боссам: щит отряда на десятке крипов сливал армию в голубое пятно
+    const big = u.kind === 'hero' || u.kind === 'boss';
+    const bubble = (color: number, edge: number) => big
+      ? g.ellipse(p.x, cy, p.w * 0.9 + 3, p.h * 0.62).fill({ color, alpha: 0.18 }).stroke({ color: edge, width: 1, alpha: 0.6 })
+      : g.ellipse(p.x, cy, p.w * 0.7 + 2, p.h * 0.55).stroke({ color: edge, width: 1, alpha: 0.35 });
+    if ((u.shield ?? 0) > 0) bubble(0x66ccff, 0xaaeeff);
     for (const e of u.effects ?? []) {
       if (e.until <= tick) continue;
-      if (e.k === 'invuln') g.ellipse(p.x, cy, p.w * 0.9 + 3, p.h * 0.62).fill({ color: GOLD, alpha: 0.2 }).stroke({ color: 0xfff2a0, width: 1, alpha: 0.7 });
+      if (e.k === 'invuln') bubble(GOLD, 0xfff2a0);
       else if (e.k === 'atk' && e.src?.includes(':boss_enrage:')) g.ellipse(p.x, cy, p.w * 0.9 + 4, p.h * 0.62 + 2).fill({ color: 0xff2222, alpha: 0.14 + 0.1 * Math.sin(now / 120) }).stroke({ color: 0xff4444, width: 1, alpha: 0.7 });
       else if (e.k === 'stun') for (let k = 0; k < 3; k++) { const a = now / 180 + k * 2.1; g.rect(p.x + Math.cos(a) * 6 - 1, p.y - p.h - 3 + Math.sin(a) * 2 - 1, 3, 3).fill(0xffee44); }
       else if (e.k === 'root') for (let k = -1; k <= 1; k++) g.moveTo(p.x + k * 4, p.y + 1).lineTo(p.x + k * 5 + 1, p.y - 5).stroke({ color: 0x55aa33, width: 1.5 });
