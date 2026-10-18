@@ -1,6 +1,7 @@
 import economy from '../data/economy.json';
 import { baseHp, mobAtk, mobHp } from './economy';
 import { mobRaceForFloor } from './races';
+import { bossAbilities, bossFirstCds } from './bosses';
 import type { Unit } from './types';
 
 let nextId = 1;
@@ -25,8 +26,14 @@ export function spawnWave(n: number, w: number, startX: number): Unit[] {
   const units: Unit[] = [];
   const isLast = w === F.wavesPerFloor;
   if (isLast) {
-    if (isRaidBossFloor(n)) units.push(makeUnit('boss', race, 'raid_boss', startX + 0.5, hp * F.raidBossHpMult, atk * 3, 1.0, 2));
-    else if (isBossFloor(n)) units.push(makeUnit('boss', race, 'boss', startX + 0.5, hp * F.bossHpMult, atk * 2, 1.0, 1.5));
+    const raid = isRaidBossFloor(n);
+    if (raid || isBossFloor(n)) {
+      const b = raid ? makeUnit('boss', race, 'raid_boss', startX + 0.5, hp * F.raidBossHpMult, atk * 3, 1.0, 2)
+        : makeUnit('boss', race, 'boss', startX + 0.5, hp * F.bossHpMult, atk * 2, 1.0, 1.5);
+      b.abilities = bossAbilities(race, raid);
+      b.cds = bossFirstCds(b.abilities);
+      units.push(b);
+    }
   }
   const count = isLast ? Math.ceil(F.mobsPerWave / 2) : F.mobsPerWave;
   for (let i = 0; i < count; i++) {

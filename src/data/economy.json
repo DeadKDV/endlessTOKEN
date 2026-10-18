@@ -2,6 +2,16 @@
   "tickMs": 100,
   "mob": { "hpBase": 80, "hpGrowth": 1.11, "hpStepEvery": 10, "hpStepMult": 1.5, "atkBase": 10, "atkGrowth": 1.09, "baseHpMult": 12 },
   "floor": { "wavesPerFloor": 3, "mobsPerWave": 5, "bossEvery": 10, "raidBossEvery": 50, "bossHpMult": 5, "raidBossHpMult": 20, "raidBossTimerSec": 90 },
+  "boss": {
+    "firstCdFrac": 0.5, "raidCdMult": 0.8,
+    "byRace": { "undead": ["summon", "enrage"], "elf": ["slam", "roar"], "dwarf": ["slam", "enrage"], "human": ["summon", "roar"], "orc": ["slam", "enrage"] },
+    "abilities": {
+      "slam":   { "kind": "boss_slam", "name": { "ru": "Удар", "en": "Slam" }, "cooldown": 10, "windup": 0.6, "radius": 2, "value": 2.5 },
+      "summon": { "kind": "boss_summon", "name": { "ru": "Зов", "en": "Summon" }, "cooldown": 18, "count": 2, "cap": 4, "value": 0.6 },
+      "roar":   { "kind": "stun_all", "name": { "ru": "Рёв", "en": "Roar" }, "cooldown": 16, "duration": 1 },
+      "enrage": { "kind": "buff_self_conditional", "name": { "ru": "Ярость", "en": "Enrage" }, "stat": "atk_and_speed", "value": 1.5, "hpThreshold": 0.3 }
+    }
+  },
   "rewards": { "goldBase": 10, "goldGrowth": 1.10, "floorPointsPerN": 5 },
   "hero": { "costBase": 15, "costGrowth": 1.09, "atkGrowth": 1.07, "hpGrowth": 1.06, "milestoneEvery": 10, "milestoneMult": 1.5, "formMult": [1.0, 1.8, 3.2], "creepsPerForm": [4, 6, 10], "formUnlock": { "awakening": { "floors": 50, "floorPoints": 500 }, "union": { "petLevel": 10 } } },
   "battle": { "spawnGapSec": 0.5, "waveEverySec": 24, "floorTimeSec": 300, "heroRespawnSec": 8, "creepRespawnSec": 4, "partyBaseHpMult": 4, "partyBaseX": -2 },

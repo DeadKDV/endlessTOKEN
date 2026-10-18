@@ -15,6 +15,7 @@ import { Backdrop } from './backdrop';
 import { artIndex } from './artSet';
 import { loadProto, peekProto, type Proto } from './atlasStore';
 import { sfx } from '../audio/sfx';
+import { t, tpl } from '../ui/text';
 import { mobRaceForFloor } from '../sim/races';
 import { BattleFx } from './fx';
 import races from '../data/races.json';
@@ -174,10 +175,10 @@ export class BattleView {
     this.fx.update(s, now, (u, i) => u.kind === 'hero' && i === 2 && get(save).heroes[u.refId]?.form === 2);
     this.updateProjs(now, byId);
     this.updatePopups(now);
-    drawBig(this.bossRow, s, 'enemy', 'boss', 8, 344, 'Босс', 0xdd4444);
-    drawBig(this.ownBaseRow, s, 'party', 'base', 8, 166, 'Наша база', 0x44bb55);
-    drawBig(this.baseRow, s, 'enemy', 'base', 186, 166, 'База врага', 0xdd4444);
-    this.floorLabel.text = `Этаж ${s.floor} · волна ${s.wave}`;
+    drawBig(this.bossRow, s, 'enemy', 'boss', 8, 344, t.battleHud.boss, 0xdd4444);
+    drawBig(this.ownBaseRow, s, 'party', 'base', 8, 166, t.battleHud.ownBase, 0x44bb55);
+    drawBig(this.baseRow, s, 'enemy', 'base', 186, 166, t.battleHud.enemyBase, 0xdd4444);
+    this.floorLabel.text = tpl(t.battleHud.floorWave, { n: s.floor, w: s.wave });
   }
 
   private async loadAtlases() {

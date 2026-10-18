@@ -36,6 +36,7 @@ export interface Ability {
   selfHeal?: number;
   hpThreshold?: number;
   cost?: number;
+  windup?: number;   // boss_slam: секунд предупреждения до удара
 }
 
 /** Временный эффект на юните; until — тик, до которого (не включая) он действует. */
@@ -88,6 +89,7 @@ export interface BattleState {
   goldMult?: number;
   waveGen?: WaveGen;
   nextWaveAt?: number;     // тик следующей волны из вражеской базы
+  raidUntil?: number;      // тик, к которому надо убить рейд-босса (ставится при его выходе)
   baseOpen?: boolean;      // база бьётся только после последней волны
 }
 

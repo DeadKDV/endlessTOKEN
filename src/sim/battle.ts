@@ -72,7 +72,7 @@ function spawns(s: BattleState) {
     const homeX = u.side === 'party' ? B.partyBaseX + 0.5 : WAVE_X;
     u.alive = true; u.pending = false; u.spawnAt = undefined; u.x = homeX; u.hp = u.maxHp;
     u.attackCooldown = 0; u.shield = 0; u.stacks = 0; u.revived = false; u.recalled = false;
-    if (u.cds) u.cds = u.cds.map(() => 0);
+    if (u.cds && u.side === 'party') u.cds = u.cds.map(() => 0);
     // постоянные эффекты (расовые пассивки) остаются, временные - нет
     if (u.effects) u.effects = u.effects.filter(e => e.until >= 1e9);
   }
@@ -90,6 +90,12 @@ export function step(s: BattleState): BattleState {
   if (ownBase) {
     // база пала или этаж затянулся - поражение, игра откатит на этаж назад
     if (!ownBase.alive || s.tick >= ticks(B.floorTimeSec)) { s.finished = 'lose'; return s; }
+    // рейд: босс не убит до срока - поражение
+    if (s.raidUntil !== undefined) {
+      const rb = s.units.find(u => u.refId === 'raid_boss');
+      if (!rb || (!rb.alive && !rb.pending)) s.raidUntil = undefined;
+      else if (s.tick >= s.raidUntil) { s.finished = 'lose'; return s; }
+    }
     spawns(s);
   }
   const party = s.units.filter(u => u.alive && u.side === 'party');
@@ -115,7 +121,9 @@ export function step(s: BattleState): BattleState {
     // после волн этажа - только по таймеру, иначе сильный отряд не успевает к базе
     if ((!waveLeft && s.wave < WAVES) || s.tick >= (s.nextWaveAt ?? Infinity)) {
       s.wave++;
-      s.units.push(...stagger(spawnWave(s.floor, s.wave, WAVE_X), s.tick));
+      const wave = spawnWave(s.floor, s.wave, WAVE_X);
+      if (wave.some(u => u.refId === 'raid_boss')) s.raidUntil = s.tick + ticks(economy.floor.raidBossTimerSec);
+      s.units.push(...stagger(wave, s.tick));
       s.nextWaveAt = s.tick + ticks(B.waveEverySec);
     }
     // с последней волны этажа (там же босс) базу можно бить

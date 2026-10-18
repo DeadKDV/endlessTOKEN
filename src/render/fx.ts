@@ -6,6 +6,9 @@ import { Container, Graphics, Sprite, Text, Texture, type Renderer } from 'pixi.
 import type { BattleState, Unit } from '../sim/types';
 import { sfx } from '../audio/sfx';
 import { isBossFloor, isRaidBossFloor } from '../sim/floor';
+import { isStunned } from '../sim/abilities';
+import { t, nm } from '../ui/text';
+import economy from '../data/economy.json';
 
 const MAX = 200;
 const GOLD = 0xffd54a;
@@ -39,6 +42,9 @@ export class BattleFx {
   private shakeAmp = 0;
   private prev: BattleState | null = null;
   private bossShownFloor = 0;
+  private winds = new Map<number, { cx: number; r: number; y: number }>(); // активные замахи боссов: где ударит
+  private raidG = new Graphics();
+  private raidT = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 18, fontWeight: 'bold', fill: 0xff3333, stroke: { color: 0x000000, width: 4 } } });
   private plus: Texture;
   private coin: Texture;
 
@@ -52,6 +58,10 @@ export class BattleFx {
       this.pool.push({ s, on: false, x: 0, y: 0, vx: 0, vy: 0, g: 0, age: 0, life: 0, coin: false, x0: 0, y0: 0 });
     }
     this.layer.addChild(this.g);
+    this.raidT.anchor.set(0.5, 0);
+    this.raidT.position.set(W / 2, 2);
+    this.raidG.visible = this.raidT.visible = false;
+    stage.addChild(this.raidG, this.raidT);
   }
 
   shake(amp: number, ms: number, now: number) {
@@ -117,9 +127,53 @@ export class BattleFx {
     }
     this.g.clear();
     for (const u of alive) if (u.kind !== 'base') this.status(u, s.tick, now);
+    this.bossWindups(s, now);
+    this.raidTimer(s, now);
     this.run(now);
     const k = now < this.shakeUntil ? this.shakeAmp * 2 : 0;
     this.stage.position.set((Math.random() - 0.5) * k, (Math.random() - 0.5) * k);
+  }
+
+  /** Замах босса: красный круг в точке удара растёт до края зоны; когда замах кончился без срыва - вспышка удара. */
+  private bossWindups(s: BattleState, now: number) {
+    const seen = new Set<number>();
+    for (const u of s.units) {
+      if (!u.alive || u.kind !== 'boss') continue;
+      const e = u.effects?.find(x => x.k === 'windup' && x.until > s.tick);
+      const a = u.abilities?.find(x => x.kind === 'boss_slam');
+      const p = this.pos(u.id);
+      if (!e || !a || !p) continue;
+      seen.add(u.id);
+      const r = (a.radius ?? 2) * this.cell, x = e.v * this.cell;
+      const k = Math.min(1, 1 - (e.until - s.tick) / ((a.windup ?? 0.6) * 1000 / economy.tickMs));
+      this.winds.set(u.id, { cx: x, r, y: p.y });
+      this.g.ellipse(x, p.y - 2, r, r * 0.28).fill({ color: 0xff2222, alpha: 0.12 + 0.12 * Math.sin(now / 70) }).stroke({ color: 0xff5555, width: 1.5, alpha: 0.9 });
+      this.g.ellipse(x, p.y - 2, r * k, r * 0.28 * k).fill({ color: 0xff2222, alpha: 0.2 + 0.4 * k });
+    }
+    for (const [id, w] of this.winds) {
+      if (seen.has(id)) continue;
+      this.winds.delete(id);
+      const u = s.units.find(q => q.id === id);
+      if (!u?.alive || isStunned(u, s.tick)) continue; // босс убит или оглушён - удара нет
+      this.shape('flash', w.cx, w.y - 6, w.r, 0xff4422, 350, now);
+      this.shape('ring', w.cx, w.y - 4, w.r, 0xffaa66, 450, now);
+      this.burst(w.cx, w.y - 4, 0xff6633, 12, 70);
+      this.shake(5, 300, now);
+      sfx('ult');
+    }
+  }
+
+  /** Таймер рейд-босса: крупные цифры и полоса сверху; в последние 10 с мигают. */
+  private raidTimer(s: BattleState, now: number) {
+    const left = s.raidUntil !== undefined && !s.finished ? (s.raidUntil - s.tick) * economy.tickMs / 1000 : 0;
+    const on = left > 0;
+    this.raidG.visible = this.raidT.visible = on;
+    if (!on) return;
+    const sec = Math.ceil(left), warn = left <= 10;
+    this.raidT.text = `${t.battleHud.raid} ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+    this.raidT.alpha = this.raidG.alpha = warn && Math.floor(now / 250) % 2 ? 0.3 : 1;
+    const w = 160, x = this.W / 2 - w / 2;
+    this.raidG.clear().rect(x, 24, w, 5).fill(0x222222).rect(x, 24, w * Math.min(1, left / economy.floor.raidBossTimerSec), 5).fill(warn ? 0xff2222 : 0xcc4444);
   }
 
   /** Объект состояния сменился: предыдущий бой кончился (finished остаётся на старом объекте, game.ts сразу создаёт новый). */
@@ -127,13 +181,13 @@ export class BattleFx {
     const p = this.prev;
     this.cds.clear();
     if (!p || p.waveGen || s.waveGen) return;
-    if (p.finished === 'win') { this.show('Этаж пройден!', GOLD, 1200, now); sfx('win'); }
-    else if (p.finished === 'lose') { this.show('База пала', 0xff4444, 1400, now); sfx('lose'); }
+    if (p.finished === 'win') { this.show(t.battleHud.floorClear, GOLD, 1200, now); sfx('win'); }
+    else if (p.finished === 'lose') { this.show(t.battleHud.baseFell, 0xff4444, 1400, now); sfx('lose'); }
     if (s.floor === p.floor && !p.finished) return; // перезапуск того же этажа (прокачка) - без предупреждений
     if (s.floor !== this.bossShownFloor && (isBossFloor(s.floor) || isRaidBossFloor(s.floor))) {
       this.bossShownFloor = s.floor;
       const raid = isRaidBossFloor(s.floor);
-      setTimeout(() => this.show(raid ? 'РЕЙД' : 'БОСС', 0xff3333, 1300, performance.now(), 34), p.finished === 'win' ? 1200 : 0);
+      setTimeout(() => this.show(raid ? t.battleHud.raid : t.battleHud.bossBanner, 0xff3333, 1300, performance.now(), 34), p.finished === 'win' ? 1200 : 0);
     } else if (!isBossFloor(s.floor)) this.bossShownFloor = 0;
   }
 
@@ -143,9 +197,15 @@ export class BattleFx {
     if (!me) return;
     const cy = me.y - me.h * 0.5;
     sfx(ult ? 'ult' : 'cast');
-    this.label(a.name?.ru ?? a.id, me.x, me.y - me.h - 16, now, ult ? 0xffffff : GOLD);
+    this.label(nm(a.name) || a.id, me.x, me.y - me.h - 16, now, ult ? 0xffffff : GOLD);
     this.shape('flash', me.x, cy, me.h * 0.9, c, 350, now);
     this.burst(me.x, cy, c, 6, 40);
+    if (u.kind === 'boss') { // приёмы босса: замах рисует bossWindups, рёв и зов - здесь
+      if (a.kind === 'boss_slam') return;
+      this.shape('ring', me.x, cy, a.kind === 'stun_all' ? 150 : 50, a.kind === 'stun_all' ? 0xffd0a0 : 0x9955cc, 600, now);
+      if (a.kind === 'stun_all') this.shake(6, 400, now);
+      if (a.kind === 'boss_summon') { this.burst(me.x - 15, cy, 0x9955cc, 10, 40); return; }
+    }
     if (ult) { this.shake(4, 350, now); this.shape('ring', me.x, cy, 60, 0xffffff, 450, now); }
     const side = (same: boolean) => s.units.filter(o => o.alive && !o.pending && o.kind !== 'base' && (o.side === u.side) === same);
     if (cls === 'heal' || cls === 'buff' || cls === 'shield') {
@@ -189,6 +249,7 @@ export class BattleFx {
     for (const e of u.effects ?? []) {
       if (e.until <= tick) continue;
       if (e.k === 'invuln') g.ellipse(p.x, cy, p.w * 0.9 + 3, p.h * 0.62).fill({ color: GOLD, alpha: 0.2 }).stroke({ color: 0xfff2a0, width: 1, alpha: 0.7 });
+      else if (e.k === 'atk' && e.src?.includes(':boss_enrage:')) g.ellipse(p.x, cy, p.w * 0.9 + 4, p.h * 0.62 + 2).fill({ color: 0xff2222, alpha: 0.14 + 0.1 * Math.sin(now / 120) }).stroke({ color: 0xff4444, width: 1, alpha: 0.7 });
       else if (e.k === 'stun') for (let k = 0; k < 3; k++) { const a = now / 180 + k * 2.1; g.rect(p.x + Math.cos(a) * 6 - 1, p.y - p.h - 3 + Math.sin(a) * 2 - 1, 3, 3).fill(0xffee44); }
       else if (e.k === 'root') for (let k = -1; k <= 1; k++) g.moveTo(p.x + k * 4, p.y + 1).lineTo(p.x + k * 5 + 1, p.y - 5).stroke({ color: 0x55aa33, width: 1.5 });
       else if (e.k === 'slow') g.ellipse(p.x, p.y, p.w * 0.7, 3).fill({ color: 0x4488ff, alpha: 0.5 });

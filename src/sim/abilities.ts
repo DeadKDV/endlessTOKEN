@@ -6,8 +6,8 @@
 import economy from '../data/economy.json';
 import races from '../data/races.json';
 import { raceMult } from './races';
-import { floorGold } from './economy';
-import { newId } from './floor';
+import { floorGold, mobHp, mobAtk } from './economy';
+import { newId, makeUnit } from './floor';
 import type { Ability, BattleState, Side, Unit } from './types';
 
 const DT = economy.tickMs / 1000;
@@ -145,7 +145,7 @@ function kill(s: BattleState, v: Unit, killer: Unit | undefined, rnd: () => numb
   if (rv && !v.revived) { v.revived = true; v.hp = v.maxHp * (rv.value ?? 1); return; }
   v.alive = false;
   if (v.side === 'enemy') {
-    s.goldEarned += floorGold(s.floor) * 0.6 / (economy.floor.mobsPerWave * WAVES) * (s.goldMult ?? 1);
+    if (!v.temp) s.goldEarned += floorGold(s.floor) * 0.6 / (economy.floor.mobsPerWave * WAVES) * (s.goldMult ?? 1);
     if (killer && killer.alive && depth < MAX_DEPTH) {
       if (abOf(killer, 'reset_on_kill') && killer.cds) killer.cds.fill(0);
       const ak = abOf(killer, 'on_kill_aoe');
@@ -222,6 +222,8 @@ export function applyAbilities(s: BattleState, rnd: () => number) {
     const u = s.units[i];
     if (!u.alive) continue;
     if (u.expireTick !== undefined && t >= u.expireTick) { u.alive = false; continue; }
+    const wind = u.effects?.find(e => e.k === 'windup' && e.until <= t);
+    if (wind && !isStunned(u, t)) bossSlam(s, u, wind.v, rnd); // замах истёк - удар; оглушение в замахе его срывает
     if (u.effects?.length) u.effects = u.effects.filter(e => e.until > t);
     if (u.shieldUntil !== undefined && t >= u.shieldUntil) { u.shield = 0; u.shieldUntil = undefined; }
     if (u.side === 'party' && u.race === 'orc' && u.hp / u.maxHp < orc.hpThreshold) addFx(u, 'atk', orc.mult, t + 2, 'race:orc');
@@ -240,6 +242,17 @@ export function applyAbilities(s: BattleState, rnd: () => number) {
       if (!cast(s, u, a, rnd)) continue;
       if (u.doubleCast && a.kind !== 'double_cast') { u.doubleCast = false; cast(s, u, a, rnd); }
       cds[j] = Math.ceil(sec(a.cooldown) * fxMul(u, 'cooldown', t));
+    }
+  }
+}
+
+/** Удар босса по площади вокруг точки cx, объявленной замахом: бьёт только живых в радиусе, базы не трогает. */
+function bossSlam(s: BattleState, u: Unit, cx: number, rnd: () => number) {
+  const a = u.abilities?.find(x => x.kind === 'boss_slam');
+  if (!a) return;
+  for (const e of s.units) {
+    if (e.alive && e.side !== u.side && e.kind !== 'base' && Math.abs(e.x - cx) <= (a.radius ?? 2)) {
+      dealDamage(s, u, e, atkOf(u, s.tick) * (a.value ?? 1) * raceMult(u.race, e.race), rnd);
     }
   }
 }
@@ -411,6 +424,21 @@ function cast(s: BattleState, u: Unit, a: Ability, rnd: () => number): boolean {
       fx(u, 'ghost', v);
       for (const x of s.units) if (!x.alive && x.side === u.side && x.kind === 'creep' && !x.temp) spawnTemp(s, x, 'ghost', 0.5, v, dur);
       return true;
+    case 'boss_slam': { // замах: босс замирает, точка удара видна всем (render рисует красный круг), сам удар - в bossSlam
+      const w = sec(a.windup ?? 0.6);
+      fx(u, 'windup', near.x, w);
+      fx(u, 'root', 1, w);
+      return true;
+    }
+    case 'boss_summon': {
+      if (s.units.filter(x => x.alive && x.side === u.side && x.temp).length >= (a.cap ?? 6)) return false;
+      for (let i = 0; i < (a.count ?? 2); i++) {
+        const m = makeUnit('mob', u.race, 'mob_melee', u.x - 0.4 * (i + 1), mobHp(s.floor) * (a.value ?? 1), mobAtk(s.floor), 1.0, 1);
+        m.temp = true; // без золота, не воскресает
+        s.units.push(m);
+      }
+      return true;
+    }
     case 'summon':
       for (let i = 0; i < (a.count ?? 2); i++) spawnTemp(s, u, 'summon', 0.3, 0.5, sec(v), -0.3 * (i + 1));
       return true;
