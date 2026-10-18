@@ -103,6 +103,41 @@ def build(uid, pack, projectile, tint, sheets):
         meta['tint'] = tint
     json.dump({'frames': frames, 'animations': animations, 'meta': meta}, open(os.path.join(OUT, f'{uid}.json'), 'w'))
 
+# фон боя: 360x640 (логические px), небо прозрачное, трава с верхним краем на GROUND_Y-GRASS_UP, деревья дальним (синеватым) и ближним слоем
+GROUND_Y, GRASS_UP, SCENE_W, SCENE_H = 290, 14, 360, 640
+
+
+def build_backdrop():
+    path = os.path.join(RAW, 'forest', 'Forest Tileset.png')
+    if not os.path.exists(path):
+        return
+    ts = Image.open(path).convert('RGBA')
+    tile = lambda c, r, w=1, h=1: ts.crop((c * 32, r * 32, (c + w) * 32, (r + h) * 32))
+    out = Image.new('RGBA', (SCENE_W, SCENE_H), (0, 0, 0, 0))
+    top = GROUND_Y - GRASS_UP
+    grass = tile(1, 1)
+    for y in range(top, SCENE_H, 32):
+        for x in range(0, SCENE_W, 32):
+            out.alpha_composite(grass, (x, y))
+    from PIL import ImageEnhance
+    # деревья: ёлка (4,9 2x2), дуб (10,9 2x2), кусты и камни; нижний край - у верхней кромки травы
+    pine, oak = tile(4, 9, 2, 2).crop((0, 0, 64, 64)), tile(10, 9, 2, 2)
+    def far(im):  # дальний слой: темнее и синее
+        im = ImageEnhance.Brightness(im).enhance(0.6)
+        r, g, b, a = im.split()
+        return Image.merge('RGBA', (r.point(lambda v: v * 8 // 10), g.point(lambda v: v * 9 // 10), b.point(lambda v: min(255, v * 12 // 10 + 18)), a))
+    for i, x in enumerate(range(-20, SCENE_W, 38)):
+        t = far(pine if i % 3 else oak).resize((52, 52), Image.NEAREST)  # дальние мельче
+        out.alpha_composite(t, (x, top - 46 - (i % 2) * 6))
+    for i, x in enumerate(range(-10, SCENE_W, 74)):
+        t = oak if i % 2 else pine
+        out.alpha_composite(t, (x + (i * 17) % 20, top - 52 + 2))
+    deco = [tile(15, 6), tile(14, 6), tile(17, 7), tile(15, 7), tile(13, 6)]  # кусты, камень, пень
+    for i, x in enumerate(range(8, SCENE_W - 24, 46)):
+        out.alpha_composite(deco[i % len(deco)], (x, top - 12 + (i * 5) % 6))
+    out.save(os.path.join(OUT, 'backdrop.png'))
+    print('собран фон боя')
+
 
 def main():
     if not os.path.isdir(RAW):
@@ -128,6 +163,7 @@ def main():
     ids.append('pet_fox')
     json.dump({'ids': ids}, open(os.path.join(OUT, 'index.json'), 'w'))
     print('собрано атласов:', len(ids))
+    build_backdrop()
 
 
 main()

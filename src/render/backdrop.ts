@@ -1,5 +1,6 @@
 /** Задник кодом: небо-градиент полосами, два слоя гор и земля с травой/камнями. Параллакс через tilePosition. */
-import { Container, TilingSprite, Texture } from 'pixi.js';
+import { Container, TilingSprite, Sprite, Texture, Assets } from 'pixi.js';
+import { artSet } from './artSet';
 
 const W = 360;
 let seed = 7;
@@ -25,7 +26,7 @@ function sky(h: number): Texture {
       c.fillStyle = mix(top, low, b / (bands - 1));
       c.fillRect(0, Math.floor(b * h / bands), W, Math.ceil(h / bands));
     }
-    for (let i = 0; i < 40; i++) { c.fillStyle = 'rgba(255,255,255,0.8)'; c.fillRect(Math.floor(rnd() * W), Math.floor(rnd() * h * 0.5), 1, 1); }
+    for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(255,255,255,${artSet() === 'elthen' ? 0.3 : 0.8})`; c.fillRect(Math.floor(rnd() * W), Math.floor(rnd() * h * 0.5), 1, 1); }
   });
 }
 
@@ -77,6 +78,19 @@ export class Backdrop extends Container {
     add(mountains(120, '#2a2f55', 110, [1, 2, 5]), groundY - 120, 0.1);
     add(mountains(70, '#1d3a3a', 60, [2, 3, 7]), groundY - 70, 0.3);
     add(ground(height - groundY + 4), groundY - 4, 1);
+    if (artSet() === 'elthen') void this.loadForest();
+  }
+
+  /** Лесной фон Elthen (public/elthen/backdrop.png, не в git): если файла нет - остаётся процедурный. */
+  private async loadForest() {
+    try {
+      const url = `${import.meta.env.BASE_URL}elthen/backdrop.png`;
+      if (!(await fetch(url, { method: 'HEAD' })).headers.get('content-type')?.startsWith('image/')) return;
+      const t = await Assets.load<Texture>(url);
+      t.source.scaleMode = 'nearest';
+      this.layers.forEach((l, i) => { if (i) l.s.visible = false; }); // горы и земля кодом уступают лесу
+      this.addChildAt(new Sprite(t), 1);
+    } catch { /* нет картинки - рисуем кодом */ }
   }
   /** camX — сдвиг мира в логических пикселях (world.x, отрицательный при движении вправо). */
   scroll(camX: number) { for (const l of this.layers) l.s.tilePosition.x = camX * l.f; }
