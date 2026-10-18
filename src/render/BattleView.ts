@@ -16,6 +16,7 @@ import { artIndex } from './artSet';
 import { loadProto, peekProto, type Proto } from './atlasStore';
 import { sfx } from '../audio/sfx';
 import { t, tpl } from '../ui/text';
+import { fmt } from '../ui/format';
 import { mobRaceForFloor } from '../sim/races';
 import { BattleFx } from './fx';
 import races from '../data/races.json';
@@ -561,7 +562,8 @@ function drawBig(row: Row, s: BattleState, side: Unit['side'], kind: 'boss' | 'b
   if (!u) return;
   const r = Math.max(0, u.hp / u.maxHp);
   row.g.clear().rect(x, 12, w, 5).fill(0x222222).rect(x, 12, w * r, 5).fill(color);
-  row.t.text = `${label} ${Math.ceil(r * 100)}%`;
+  // рейд дня: босса не убить, его HP огромное - показываем нанесённый урон, а не проценты
+  row.t.text = s.waveGen && u.refId === 'raid_boss' ? `${t.battleHud.raidDamage} ${fmt(u.maxHp - u.hp)}` : `${label} ${Math.ceil(r * 100)}%`;
   row.t.x = x;
 }
 
