@@ -5,7 +5,7 @@
   import { heroById } from '../sim/party';
   import { prestigeGain } from '../sim/prestige';
   import { fmt } from './format';
-  import { t, tpl } from './text';
+  import { t, tpl, nm } from './text';
 </script>
 
 {#if $summonReveal && heroById($summonReveal)}
@@ -14,7 +14,7 @@
     <div class="flash"></div>
     <h3>{t.reveal.title}</h3>
     <div class="big"><HeroPortrait heroId={h.id} form={0} size={144} /></div>
-    <b>{h.name.ru.split(',')[0]}</b>
+    <b>{nm(h.name).split(',')[0]}</b>
     <p class="muted">{t.race[h.race as 'human']} · {t.role[h.role as 'tank']}</p>
     <div>
       {#if !$save.party.includes(h.id)}
@@ -40,7 +40,7 @@
 {:else if $eggPopup}
   <div class="modal">
     <h3>🥚 {t.popup.egg}</h3>
-    <p>{tpl(t.popup.eggText, { name: heroById($eggPopup)?.name.ru.split(',')[0] ?? '' })}</p>
+    <p>{tpl(t.popup.eggText, { name: nm(heroById($eggPopup)?.name).split(',')[0] ?? '' })}</p>
     <button onclick={() => eggPopup.set(null)}>{t.popup.ok}</button>
   </div>
 {:else if $dungeonResult}

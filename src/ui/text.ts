@@ -1,12 +1,19 @@
 // Тексты интерфейса: шаблоны из словаря и описания эффектов зданий и артефактов.
 import ru from '../data/i18n/ru.json';
+import en from '../data/i18n/en.json';
+import { readLang } from './lang';
 import { goldPerSec, offlineHours } from '../sim/economy';
 import type { ArtifactDef } from '../sim/artifacts';
 import { artifactValue } from '../sim/artifacts';
 import type { BuildingDef } from '../sim/buildings';
 import { fmt } from './format';
 
-export const t = ru;
+export const lang = readLang();
+export const t: typeof ru = lang === 'en' ? en : ru;
+try { document.documentElement.lang = lang; } catch { /* не браузер */ }
+
+/** Название из данных ({ru,en}) на текущем языке. */
+export const nm = (n?: { ru: string; en: string }) => (n ? n[lang] : '');
 
 export function tpl(s: string, v: Record<string, string | number> = {}): string {
   return s.replace(/\{(\w+)\}/g, (_, k) => String(v[k] ?? ''));

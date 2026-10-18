@@ -3,7 +3,7 @@
   import { buildingById, buildingLevel, buildingUpgradeCost } from '../sim/buildings';
   import BuyButtons from './BuyButtons.svelte';
   import { fmt } from './format';
-  import { t, tpl, buildingEffectText } from './text';
+  import { t, tpl, buildingEffectText, nm } from './text';
 
   let { id }: { id: string } = $props();
   const b = $derived(buildingById(id)!);
@@ -14,7 +14,7 @@
 
 <div class="row">
   <span>
-    <b>{b.name.ru}</b> · {tpl(t.building.level, { n: lvl, max: b.maxLevel })}<br />
+    <b>{nm(b.name)}</b> · {tpl(t.building.level, { n: lvl, max: b.maxLevel })}<br />
     <span class="muted">{buildingEffectText(b, lvl)}</span>
   </span>
   <span class="col">

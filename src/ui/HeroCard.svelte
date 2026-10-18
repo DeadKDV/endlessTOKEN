@@ -13,7 +13,7 @@
   import HeroPortrait from './HeroPortrait.svelte';
   import BuyButtons from './BuyButtons.svelte';
   import { fmt } from './format';
-  import { t, tpl, artifactEffectText } from './text';
+  import { t, tpl, artifactEffectText, nm, lang } from './text';
   import { abilityText } from './abilityText';
   import { heroStatView } from './heroStats';
   import type { Ability } from '../sim/types';
@@ -34,20 +34,20 @@
 
 {#snippet skill(a: Ability, open: boolean, tag: string, lock: string)}
   <div class="skill" class:locked={!open}>
-    <div><b>{a.name?.ru}</b> <span class="muted">· {tag}</span></div>
-    <div>{abilityText(a, 'ru')}</div>
+    <div><b>{nm(a.name)}</b> <span class="muted">· {tag}</span></div>
+    <div>{abilityText(a, lang)}</div>
     {#if !open}<div class="muted">{lock}</div>{/if}
   </div>
 {/snippet}
 
 <div class="card">
   <div class="head">
-    <b>{def.name.ru}</b>
+    <b>{nm(def.name)}</b>
     <button onclick={onclose}>{t.hero.close}</button>
   </div>
   <div class="tile">
     <HeroPortrait heroId={id} form={sv.form} size={96} />
-    <div>{t.race[def.race as 'human']} · {t.role[def.role as 'tank']}<br />{tpl(t.level, { n: sv.lvl })} · {def.forms[sv.form].name.ru}</div>
+    <div>{t.race[def.race as 'human']} · {t.role[def.role as 'tank']}<br />{tpl(t.level, { n: sv.lvl })} · {nm(def.forms[sv.form].name)}</div>
   </div>
   <div class="row">
     <span class="muted">{fmt(heroLevelCost(sv.lvl))} 💰</span>
@@ -78,7 +78,7 @@
     <div class="muted">{t.hero.noPet}</div>
   {:else}
     <div class="row">
-      <span>{def.pet.name.ru} · {tpl(t.hero.petLevel, { n: sv.pet, max: economy.pets.maxLevel })}</span>
+      <span>{nm(def.pet.name)} · {tpl(t.hero.petLevel, { n: sv.pet, max: economy.pets.maxLevel })}</span>
       {#if sv.pet >= economy.pets.maxLevel}
         <span class="muted">{t.hero.maxed}</span>
       {:else}
@@ -93,7 +93,7 @@
     {#each [0, 1, 2] as f}
       <div class="fcell">
         <HeroPortrait heroId={id} form={f} size={72} dim={f > sv.form} />
-        <span class:muted={f > sv.form}>{def.forms[f].name.ru}</span>
+        <span class:muted={f > sv.form}>{nm(def.forms[f].name)}</span>
         {#if f > sv.form}
           <span class="muted">{f === 1
             ? tpl(t.hero.awakenNeed, { a: Math.min(sv.floorsInParty, U.awakening.floors), b: U.awakening.floors, c: Math.min($save.floorPoints, U.awakening.floorPoints), d: U.awakening.floorPoints })
@@ -103,7 +103,7 @@
     {/each}
   </div>
 
-  <h4>{t.hero.formDone.replace('{name}', def.forms[sv.form].name.ru)}</h4>
+  <h4>{t.hero.formDone.replace('{name}', nm(def.forms[sv.form].name))}</h4>
   {#if sv.form === 0}
     <div class="row">
       <span class="muted">{tpl(t.hero.awakenNeed, { a: Math.min(sv.floorsInParty, U.awakening.floors), b: U.awakening.floors, c: Math.min($save.floorPoints, U.awakening.floorPoints), d: U.awakening.floorPoints })}</span>
@@ -123,7 +123,7 @@
         {@const aid = sv.artifacts[i]}
         {#if aid}
           {@const a = artifactById(aid)!}
-          <span>{a.name.ru} · {artifactEffectText(a, $save.artifacts[aid])}</span>
+          <span>{nm(a.name)} · {artifactEffectText(a, $save.artifacts[aid])}</span>
           <button onclick={() => unequipArtifactAction(id, aid)}>{t.hero.unequip}</button>
         {:else}
           <span class="muted">{tpl(t.hero.slot, { n: i + 1 })}: {t.hero.empty}</span>
@@ -137,7 +137,7 @@
     {#each spare as aid (aid)}
       {@const a = artifactById(aid)!}
       <div class="row">
-        <span>{a.name.ru} · {artifactEffectText(a, $save.artifacts[aid])}</span>
+        <span>{nm(a.name)} · {artifactEffectText(a, $save.artifacts[aid])}</span>
         <button onclick={() => equipArtifactAction(id, aid)}>{t.action.equip}</button>
       </div>
     {:else}

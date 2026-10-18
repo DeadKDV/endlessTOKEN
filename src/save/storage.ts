@@ -35,7 +35,37 @@ export function serialize(s: GameState): string {
 export function deserialize(blob: string): GameState {
   return migrate(JSON.parse(LZString.decompressFromBase64(blob) ?? '{}'));
 }
+/** После записи импорта/сброса автосохранение молчит, иначе таймер затрёт новую запись до перезагрузки. */
+let frozen = false;
+
+export type ImportResult = { ok: true; state: GameState } | { ok: false; error: 'empty' | 'bad' | 'newer' };
+
+/** Чистая проверка строки импорта: ничего не пишет, битая строка -> ошибка. */
+export function parseImport(blob: string): ImportResult {
+  const raw = blob.trim();
+  if (!raw) return { ok: false, error: 'empty' };
+  let o: any;
+  try { o = JSON.parse(LZString.decompressFromBase64(raw) || ''); } catch { return { ok: false, error: 'bad' }; }
+  if (!o || typeof o !== 'object' || typeof o.v !== 'number') return { ok: false, error: 'bad' };
+  if (o.v > Math.max(...Object.keys(migrations).map(Number)) + 1) return { ok: false, error: 'newer' };
+  let s: any;
+  try { s = migrate(o); } catch { return { ok: false, error: 'bad' }; }
+  const ok = typeof s.floor === 'number' && typeof s.savedAt === 'number' && Array.isArray(s.party)
+    && s.heroes && typeof s.heroes === 'object' && s.base && typeof s.base === 'object';
+  return ok ? { ok: true, state: s as GameState } : { ok: false, error: 'bad' };
+}
+
+/** Заменить сейв строкой (импорт) или новой игрой (blob не задан); вызывающий перезагружает страницу. */
+export function replaceSave(blob?: string): boolean {
+  try {
+    localStorage.setItem(KEY, blob ?? serialize(migrate(newGameState())));
+    frozen = true;
+    return true;
+  } catch { return false; }
+}
+
 export function saveLocal(s: GameState) {
+  if (frozen) return;
   try { localStorage.setItem(KEY, serialize(s)); } catch { /* приватный режим */ }
 }
 export function loadLocal(): GameState {

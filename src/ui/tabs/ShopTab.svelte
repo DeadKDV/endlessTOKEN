@@ -4,7 +4,7 @@
   import { HEROES, heroById } from '../../sim/party';
   import economy from '../../data/economy.json';
   import HeroPortrait from '../HeroPortrait.svelte';
-  import { t, tpl } from '../text';
+  import { t, tpl, nm } from '../text';
 
   const G = economy.gems;
   const unowned = $derived(HEROES.filter(h => !$save.heroes[h.id]));
@@ -25,12 +25,12 @@
   <span>{t.shop.summon}<br /><span class="muted">{unowned.length ? t.shop.summonHint : t.shop.free}</span></span>
   <div class="grid">
     {#each unowned as h (h.id)}
-      <button class="pick" class:sel={h.id === target} aria-label={h.name.ru} title={h.name.ru.split(',')[0]} onclick={() => (pick = h.id)}>
+      <button class="pick" class:sel={h.id === target} aria-label={nm(h.name)} title={nm(h.name).split(',')[0]} onclick={() => (pick = h.id)}>
         <HeroPortrait heroId={h.id} size={48} dim={h.id !== target} />
       </button>
     {/each}
   </div>
-  {#if target}<span>{heroById(target)?.name.ru.split(',')[0]}</span>{/if}
+  {#if target}<span>{nm(heroById(target)?.name).split(',')[0]}</span>{/if}
   <button disabled={!target || $save.gems < G.heroSummon} onclick={() => summonHeroAction(target, 'gems')}>{tpl(t.shop.cost, { n: G.heroSummon })}</button>
 </div>
 

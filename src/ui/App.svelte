@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { save, heroCard, dungeonRun, questsOpen } from '../game';
+  import { save, heroCard, dungeonRun, questsOpen, settingsOpen } from '../game';
   import BattleTab from './tabs/BattleTab.svelte';
   import HeroesTab from './tabs/HeroesTab.svelte';
   import VillageTab from './tabs/VillageTab.svelte';
@@ -10,6 +10,7 @@
   import HeroCard from './HeroCard.svelte';
   import Popups from './Popups.svelte';
   import QuestsPopup from './QuestsPopup.svelte';
+  import SettingsPopup from './SettingsPopup.svelte';
   import FloorStrip from './FloorStrip.svelte';
   import Toast from './Toast.svelte';
   import Tutorial from './Tutorial.svelte';
@@ -26,6 +27,12 @@
   <span>⭐ {fmt($save.floorPoints)}</span>
   <span>💎 {$save.gems}</span>
   <span>🔮 {$save.crystals}</span>
+  <button class="gear" aria-label={t.settings.open} title={t.settings.open} onclick={() => settingsOpen.set(true)}>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1" />
+    </svg>
+  </button>
 </div>
 
 <div class="dock">
@@ -49,6 +56,7 @@
 
 {#if $heroCard && $save.heroes[$heroCard]}<HeroCard id={$heroCard} onclose={() => heroCard.set(null)} />{/if}
 {#if $questsOpen}<QuestsPopup />{/if}
+{#if $settingsOpen}<SettingsPopup />{/if}
 <Toast />
 <Popups />
 <Tutorial />
@@ -56,6 +64,7 @@
 <style>
   .top { position: absolute; top: 0; left: 0; right: 0; height: 40px; display: flex; justify-content: space-around; align-items: center; color: #fff; font: 14px monospace; background: #15152a; }
   /* Сцена боя занимает верх холста (земля на 290/640, подписи под ней до ~320 = 50%); док начинается сразу под ней. */
+  .gear { min-height: 0; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; background: none; border: 0; color: #aaa; }
   .dock { position: absolute; top: 50%; left: 0; right: 0; bottom: 56px; display: flex; flex-direction: column; background: #101020; }
   .panel { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 8px; color: #ddd; font: 13px monospace; background: #101020; }
   nav { position: absolute; bottom: 0; left: 0; right: 0; height: 56px; display: flex; background: #15152a; }

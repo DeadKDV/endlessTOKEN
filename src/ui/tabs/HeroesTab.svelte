@@ -6,7 +6,7 @@
   import HeroPortrait from '../HeroPortrait.svelte';
   import BuyButtons from '../BuyButtons.svelte';
   import { fmt } from '../format';
-  import { t, tpl } from '../text';
+  import { t, tpl, nm } from '../text';
 
   const slots = $derived(partySlots($save.maxFloor));
   const reserve = $derived(Object.keys($save.heroes).filter(id => !$save.party.includes(id)));
@@ -22,7 +22,7 @@
       <HeroPortrait heroId={id} form={h.form} size={56} />
     </span>
     <div class="info">
-      <b>{heroById(id)?.name.ru.split(',')[0]}</b>
+      <b>{nm(heroById(id)?.name).split(',')[0]}</b>
       <span class="muted">{tpl(t.level, { n: h.lvl })} · {t.form[String(h.form) as '0' | '1' | '2']} · {fmt(heroLevelCost(h.lvl))} 💰</span>
       <BuyButtons can={Number($save.gold) >= heroLevelCost(h.lvl)} onbuy={n => levelUpHero(id, n)} />
       <span>
@@ -52,7 +52,7 @@
     {#each unowned as h (h.id)}
       <div class="cell">
         <HeroPortrait heroId={h.id} size={56} dim />
-        <span class="muted">{h.name.ru.split(',')[0]}</span>
+        <span class="muted">{nm(h.name).split(',')[0]}</span>
         <span class="muted">{t.race[h.race as 'human']} · {t.role[h.role as 'tank']}</span>
         <button disabled={$save.crystals < summonCost($save)} onclick={() => summonHeroAction(h.id)}>
           {t.hero.summon} {tpl(t.hero.summonCrystals, { n: summonCost($save) })}

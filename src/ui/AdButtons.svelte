@@ -3,7 +3,7 @@
   import { save, addGold, track } from '../game';
   import { floorGold } from '../sim/economy';
   import economy from '../data/economy.json';
-  import ru from '../data/i18n/ru.json';
+  import { t } from './text';
   import { get } from 'svelte/store';
 
   let showing = $state<string | null>(null);
@@ -25,10 +25,10 @@
 </script>
 
 <div class="ads">
-  <button onclick={() => watch('speed')}>▶ {ru.ads.speed}</button>
-  <button onclick={() => watch('resources')} disabled={$save.ads.resourcesToday >= A.resources.perDay}>▶ {ru.ads.resources}</button>
-  <button onclick={() => watch('gems')} disabled={$save.ads.gemsToday >= A.gems.perDay}>▶ {ru.ads.gems}</button>
-  <button onclick={() => watch('boost')}>▶ {ru.ads.boost}</button>
+  <button onclick={() => watch('speed')}>▶ {t.ads.speed}</button>
+  <button onclick={() => watch('resources')} disabled={$save.ads.resourcesToday >= A.resources.perDay}>▶ {t.ads.resources}</button>
+  <button onclick={() => watch('gems')} disabled={$save.ads.gemsToday >= A.gems.perDay}>▶ {t.ads.gems}</button>
+  <button onclick={() => watch('boost')}>▶ {t.ads.boost}</button>
 </div>
 
 {#if showing}

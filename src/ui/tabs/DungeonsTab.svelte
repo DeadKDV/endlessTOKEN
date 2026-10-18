@@ -4,7 +4,7 @@
   import { dungeonUnlockLevel } from '../../sim/buildings';
   import { ARTIFACTS, ARTIFACT_MAX_LEVEL, ARTIFACT_PRICE, artifactUpgradeCost } from '../../sim/artifacts';
   import economy from '../../data/economy.json';
-  import { t, tpl, artifactEffectText } from '../text';
+  import { t, tpl, artifactEffectText, nm } from '../text';
 
   const timeLeft = $derived($battle && $dungeonRun ? Math.max(0, Math.ceil((DUNGEON_MAX_TICKS - $battle.tick) / 10)) : 0);
 </script>
@@ -36,7 +36,7 @@
           {@const lvl = $save.artifacts[a.id] ?? 0}
           <div class="row">
             <span>
-              {a.name.ru}{lvl ? ` · ${tpl(t.dungeonUi.owned, { n: lvl, max: ARTIFACT_MAX_LEVEL })}` : ''}<br />
+              {nm(a.name)}{lvl ? ` · ${tpl(t.dungeonUi.owned, { n: lvl, max: ARTIFACT_MAX_LEVEL })}` : ''}<br />
               <span class="muted">{artifactEffectText(a, lvl)}</span>
             </span>
             {#if !lvl}

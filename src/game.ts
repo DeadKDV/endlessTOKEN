@@ -34,6 +34,8 @@ export const eggPopup = writable<string | null>(null);
 /** Идущий бой в подземелье (на той же сцене) и его итог. */
 /** Герой, чья полноэкранная карточка открыта. */
 export const heroCard = writable<string | null>(null);
+/** Полноэкранный попап «Настройки». */
+export const settingsOpen = writable(false);
 /** Окно подтверждения воскрешения. */
 export const prestigeAsk = writable(false);
 /** Герой, только что призванный (попап-раскрытие). */

@@ -1,12 +1,12 @@
 <script lang="ts">
   // Облачко-подсказка обучения: привязано к элементу с data-tut, одно за раз; «Понятно» закрывает, «Пропустить» гасит всё.
-  import { save, heroCard, questsOpen, dungeonRun, eggPopup, prestigeAsk, summonReveal, offlinePopup } from '../game';
+  import { save, heroCard, questsOpen, settingsOpen, dungeonRun, eggPopup, prestigeAsk, summonReveal, offlinePopup } from '../game';
   import { nextTutorialStep, dismissTutorialStep, skipTutorial, TUTORIAL_STEPS } from './tutorial';
   import { t, tpl } from './text';
 
   const step = $derived(nextTutorialStep($save));
   // поверх карточки, заданий и попапов подсказку не рисуем
-  const busy = $derived(!!($heroCard || $questsOpen || $dungeonRun || $eggPopup || $prestigeAsk || $summonReveal || $offlinePopup));
+  const busy = $derived(!!($heroCard || $questsOpen || $settingsOpen || $dungeonRun || $eggPopup || $prestigeAsk || $summonReveal || $offlinePopup));
   const text = $derived(step ? (t.tutorial.steps as Record<string, string>)[step.id] : '');
   const index = $derived(step ? TUTORIAL_STEPS.indexOf(step) + 1 : 0);
 
